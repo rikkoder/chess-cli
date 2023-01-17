@@ -70,7 +70,7 @@
 	}
 
 // #define CHECK_AT_DEST (((color & BLACK) && dest->check_for_black) || (!(color & BLACK) && dest->check_for_white))
-#define CHECK_AT_DEST (dest->has_check((color & BLACK) ? 1 : 0))
+#define CHECK_AT_DEST (dest->has_check[(color & BLACK) ? 1 : 0])
 
 static	const tile_t**	king_moves		(const board_t *board, const tile_t *tile);
 static	const tile_t**	queen_moves		(const board_t *board, const tile_t *tile);
@@ -196,10 +196,10 @@ static const tile_t** king_moves (const board_t *board, const tile_t *tile) {
 		if (dest->piece != NULL)
 			flag = false;
 		dest = &board->tiles[row][2];
-		if (flag && dest->piece != NULL || CHECK_AT_DEST)
+		if ((flag && dest->piece != NULL) || CHECK_AT_DEST)
 			flag = false;
 		dest = &board->tiles[row][3];
-		if (flag && dest->piece != NULL || CHECK_AT_DEST)
+		if ((flag && dest->piece != NULL) || CHECK_AT_DEST)
 			flag = false;
 		if (flag)
 			moves[idx++] = &board->tiles[row][col-2];
@@ -211,7 +211,7 @@ static const tile_t** king_moves (const board_t *board, const tile_t *tile) {
 		if (dest->piece != NULL || CHECK_AT_DEST)
 			flag = false;
 		dest = &board->tiles[row][6];
-		if (flag && dest->piece != NULL || CHECK_AT_DEST)
+		if ((flag && dest->piece != NULL) || CHECK_AT_DEST)
 			flag = false;
 		if (flag)
 			moves[idx++] = &board->tiles[row][col+2];
