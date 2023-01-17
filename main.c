@@ -3,16 +3,17 @@
 #include <ncurses.h>
 #include <locale.h>
 
+#include "main.h"
 #include "main_menu.h"
 
-const long double SCR_RES = (1920./1080);
+// const long double SCR_RES = (1920./1080);
 
 int main (int argc, char **argv) {
 	setlocale(LC_ALL, "");	// support printing of UNICODE chars
 	initscr();
 	noecho();
-	curs_set(FALSE);
-	keypad(stdscr, TRUE);
+	curs_set(false);
+	keypad(stdscr, true);
 
 // 	WINDOW *main_menu_win = NULL;
 	init_main_menu();
