@@ -14,6 +14,7 @@ const wchar_t PIECES[2][2][6] = {
 	}
 };
 
+
 piece_t* init_piece(short i, short j) {
 	// no piece
 	if (i > 1 && i < 6)
@@ -52,6 +53,7 @@ piece_t* init_piece(short i, short j) {
 	return piece;
 }
 
+
 wchar_t get_piece_face(const piece_t *piece) {
 	if (piece == NULL)
 		return L' ';
@@ -59,6 +61,7 @@ wchar_t get_piece_face(const piece_t *piece) {
 	while (!(piece->face & (1 << type))) type++;
 	return PIECES[(bool) (piece->face & UNICODE)][(bool) (piece->face & BLACK)][type];
 }
+
 
 void init_board(board_t *board) {
 	memset(board, 0, sizeof(*board));
@@ -69,4 +72,48 @@ void init_board(board_t *board) {
 			board->tiles[i][j].piece = init_piece(i, j);
 		}
 	}
+
+	board->kings[0] = &(board->tiles[0][4]);
+	board->kings[1] = &(board->tiles[7][4]);
+}
+
+
+void copy_board (board_t *dest_board, const board_t *src_board) {
+	if (dest_board == NULL)
+		return;
+
+	for (short i = 0; i < 8; i++)
+		for (short j = 0; j < 8; j++)
+			if (dest_board->tiles[i][j].piece != NULL)
+				free(dest_board->tiles[i][j].piece);
+
+	memset(dest_board, 0, sizeof(board_t));
+	memcpy(dest_board, src_board, sizeof(board_t));
+	for (short i = 0; i < 8; i++) {
+		for (short j = 0; j < 8; j++) {
+			if (dest_board->tiles[i][j].piece == NULL) // || dest_board->tiles[i][j].piece != src_board->tiles[i][j].piece)
+				continue;
+			dest_board->tiles[i][j].piece = malloc(sizeof(piece_t));
+			memcpy(dest_board->tiles[i][j].piece, src_board->tiles[i][j].piece, sizeof(piece_t));
+		}
+	}
+
+	// set kings
+	for (int i = 0; i < 2; i++) {
+		const tile_t *old_king = src_board->kings[i];
+		dest_board->kings[i] = &(dest_board->tiles[old_king->row][old_king->col]);
+	}
+}
+
+
+void delete_board (board_t *board) {
+	if (board == NULL)
+		return;
+
+	for (short i = 0; i < 8; i++)
+		for (short j = 0; j < 8; j++)
+			if (board->tiles[i][j].piece)
+				free(board->tiles[i][j].piece);
+	
+	free(board);
 }

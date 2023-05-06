@@ -23,14 +23,15 @@
 #define INVALID_ROW -1
 #define INVALID_COL -1
 
-typedef uint32_t chance_t;
-typedef uint32_t face_t;
-typedef struct tile_t tile_t;
+typedef uint32_t		chance_t;
+typedef uint32_t		face_t;
+typedef bool			color_t;
+typedef struct tile_t	tile_t;
 
 typedef struct {
 	face_t face;
 	bool is_moved;
-	tile_t *pinned_by;
+	// tile_t *pinned_by;
 } piece_t ;
 
 typedef struct tile_t {
@@ -45,12 +46,14 @@ typedef struct tile_t {
 
 typedef struct board_t {
 	tile_t tiles[8][8];
+	tile_t *kings[2];
 } board_t;
 
 
-piece_t* init_piece(short i, short j);
-wchar_t get_piece_face(const piece_t *piece);
-void init_board(board_t *board);
+piece_t*	init_piece		(short i, short j);
+wchar_t		get_piece_face	(const piece_t *piece);
+void		init_board		(board_t *board);
+void		copy_board		(board_t *dest_board, const board_t *src_board);
 
 
 #endif
