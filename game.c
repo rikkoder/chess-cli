@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 
 #include "game.h"
 #include "utilities.h"
@@ -12,20 +13,23 @@ static	WINDOW			*plr1_scr;
 static	WINDOW			*plr2_scr;
 static	WINDOW			*board_scr;
 static	WINDOW			*hud_scr;
+static	WINDOW			*game_over_scr;
 static	int				term_h;
 static	int				term_w;
 static	bool			onboard;
-static	chance_t		chance = WHITE;
-static	const tile_t	**moves = NULL;
+// static	const tile_t	**moves = NULL;
 
-// static	void	draw_moves	();
-static	void	draw_tile	(int y, int x, bool is_cur, bool is_sel, bool is_avail);
-static 	void 	set_dest	(board_t *board);
-static 	void 	clear_dest	(board_t *board);
+// static	void	draw_moves		();
+static	void	draw_tile		(int y, int x, bool is_cur, bool is_sel, bool is_avail);
+// static 	void 	set_dest		(board_t *board);
+// static 	void 	clear_dest		(board_t *board);
+static	void	game_over		(const board_t *board);
+static	void	del_game_wins	(void);
 
 void init_game() {
 	board_t board;
 	init_board(&board);
+	const tile_t	**moves = NULL;
 	int key = -1;
 	onboard = true;
 	short cur_tile[2] = {0, 0};
@@ -66,18 +70,21 @@ void init_game() {
 		} else if (onboard) {
 			if (key == '\n' || key == '\r' || key == KEY_ENTER) {
 				if (sel_tile[0] != INVALID_ROW && sel_tile[1] != INVALID_ROW) {
-					if (move_piece(&board, cur_tile, sel_tile))
-						chance = (chance == WHITE ? BLACK : WHITE);
+					if (move_piece(&board, cur_tile, sel_tile) && is_game_finished(&board)) {
+						game_over(&board);
+						break;
+					}
+
 					clear_dest(&board);
 					sel_tile[0] = INVALID_ROW;
 					sel_tile[1] = INVALID_COL;
 					if (moves != NULL)
 						free(moves);
-				} else if (board.tiles[cur_tile[0]][cur_tile[1]].piece != NULL && (board.tiles[cur_tile[0]][cur_tile[1]].piece->face & COLOR_BIT) == chance){
+				} else if (board.tiles[cur_tile[0]][cur_tile[1]].piece != NULL && (board.tiles[cur_tile[0]][cur_tile[1]].piece->face & COLOR_BIT) == board.chance){
 					sel_tile[0] = cur_tile[0];
 					sel_tile[1] = cur_tile[1];
 					moves = find_moves(&board, &board.tiles[sel_tile[0]][sel_tile[1]]);
-					set_dest(&board);
+					set_dest(&board, moves);
 				}
 			} else if ( key == KEY_UP || key == 'k') {
 				if (cur_tile[0] < 7) cur_tile[0]++;
@@ -140,12 +147,7 @@ void init_game() {
 		key = wgetch(game_scr);
 	}
 
-	delwin(game_scr);
-	delwin(menu_scr);
-	delwin(plr1_scr);
-	delwin(plr2_scr);
-	delwin(board_scr);
-	delwin(hud_scr);
+	del_game_wins();
 }
 
 static void draw_tile(int y, int x, bool is_cur, bool is_sel, bool can_be_dest) {
@@ -199,7 +201,7 @@ static void draw_moves() {
 }
  */
 
-static void set_dest(board_t *board) {
+/* static void set_dest(board_t *board) {
 	if (moves == NULL)
 		return;
 	for (int i=0; i<MAX_MOVES; i++) {
@@ -219,4 +221,103 @@ static void clear_dest(board_t *board) {
 			board->tiles[i][j].can_be_dest = false;
 		}
 	}
+} */
+
+
+static void game_over (const board_t *board) {
+	if (board->result == PENDING)
+		return;
+
+	del_game_wins();
+
+	initialize_with_box(game_over_scr);
+
+	const int NO_OF_OPTS = 4;
+	const int OPTS_SIZE = 12;
+
+	// initialize options
+	char options[NO_OF_OPTS][OPTS_SIZE+1];
+	snprintf(options[0], OPTS_SIZE, "%-11s", "Undo");
+	snprintf(options[1], OPTS_SIZE, "%-11s", "Save");
+	snprintf(options[2], OPTS_SIZE, "%-11s", "Restart");
+	snprintf(options[3], OPTS_SIZE, "%-11s", "Main Menu");
+	int selected_opt = 0;
+
+	const int RESULT_SIZE = 20;
+/* 	wchar_t result[RESULT_SIZE+1];
+	if (board->result == WHITE_WON)
+		swprintf(result, RESULT_SIZE, L"%-10s", "White Won");
+	else if (board->result == BLACK_WON)
+		swprintf(result, RESULT_SIZE, L"%-10s", "Black Won");
+	else if (board->result == STALE_MATE)
+		swprintf(result, RESULT_SIZE, L"%-10s", "Stale Mate");
+	// error
+	else
+		exit(0); */
+
+	char result[RESULT_SIZE];
+	if (board->result == WHITE_WON)
+		sprintf(result, "%s", "White Won");
+	else if (board->result == BLACK_WON)
+		sprintf(result, "%s", "Black Won");
+	else if (board->result == STALE_MATE)
+		sprintf(result, "%s", "Stale Mate");
+	// error
+	else
+		exit(0);
+
+	wattron(game_over_scr, A_UNDERLINE);
+	mvwaddnstr(game_over_scr, 1, game_over_scr_w/2 - strlen(result)/2, result, RESULT_SIZE);
+	wattroff(game_over_scr, A_UNDERLINE);
+
+	int key = -1;
+	while (true) {
+		if (key == KEY_RESIZE) {
+#ifdef PDCURSES
+			resize_term(0, 0);
+#endif
+			getmaxyx(stdscr, term_h, term_w);
+			translate_with_box(game_over_scr);
+			wclear(stdscr);
+		}
+
+		if (key == KEY_UP || key == 'k')
+			selected_opt = (selected_opt-1 + NO_OF_OPTS) % NO_OF_OPTS;
+		else if (key == KEY_DOWN || key == 'j')
+			selected_opt = (selected_opt+1) % NO_OF_OPTS;
+		else if (key == '\n' || key == '\r' || key == KEY_ENTER) {
+			if (selected_opt == 2) {
+				delwin(game_over_scr);
+				init_game();
+				return;
+			}
+			else if (selected_opt == 3) {
+				delwin(game_over_scr);
+				return ;
+			}
+		}
+
+		for (int i=0; i<NO_OF_OPTS; i++) {
+			if (i == selected_opt)
+				wattron(game_over_scr, A_STANDOUT);
+			else
+				wattroff(game_over_scr, A_STANDOUT);
+
+			mvwaddnstr(game_over_scr, game_over_scr_h/2 - NO_OF_OPTS/2 + i, game_over_scr_w/2 - (OPTS_SIZE-1)/2, options[i], OPTS_SIZE);
+		}
+
+		wrefresh(stdscr);
+		wrefresh(game_over_scr);
+		key = wgetch(game_over_scr);
+	}
+}
+
+
+static void del_game_wins (void) {
+	delwin(game_scr);
+	delwin(menu_scr);
+	delwin(plr1_scr);
+	delwin(plr2_scr);
+	delwin(board_scr);
+	delwin(hud_scr);
 }

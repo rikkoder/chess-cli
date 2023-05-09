@@ -39,9 +39,9 @@ void init_main_menu() {
 		}
 
 		if (key == KEY_UP || key == 'k')
-			selected_opt = (selected_opt+1)%NO_OF_OPTS;
+			selected_opt = (selected_opt-1 + NO_OF_OPTS) % NO_OF_OPTS;
 		else if (key == KEY_DOWN || key == 'j')
-			selected_opt = (selected_opt-1 + NO_OF_OPTS)%NO_OF_OPTS;
+			selected_opt = (selected_opt+1) % NO_OF_OPTS;
 		else if (key == '\n' || key == '\r' || key == KEY_ENTER) {
 			if (selected_opt == 0) {
 				// clear before displaying game
@@ -68,16 +68,13 @@ void init_main_menu() {
 		}
 
 
-		// native and ncurses resolutions
-// 		double res[2] = {1920./1080, (float)term_w/term_h};
 		for (int i=0; i<NO_OF_OPTS; i++) {
-			if (i == selected_opt) wattron(main_menu, A_STANDOUT);
-			else wattroff(main_menu, A_STANDOUT);
+			if (i == selected_opt)
+				wattron(main_menu, A_STANDOUT);
+			else
+				wattroff(main_menu, A_STANDOUT);
 
 			mvwaddnwstr(main_menu, main_menu_h/2 - NO_OF_OPTS/2 + i, main_menu_w/2 - (OPTS_SIZE-1)/2, woptions[i], OPTS_SIZE);
-
-			// print native and ncurses resolutions
-// 			mvwprintw(main_menu, main_menu_h/2 - NO_OF_OPTS/2 + i, main_menu_w/2 - (OPTS_SIZE-1)/2, "%.6f", res[i]);
 		}
 
 		wrefresh(stdscr);

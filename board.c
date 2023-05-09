@@ -75,9 +75,11 @@ void init_board(board_t *board) {
 
 	board->kings[0] = &(board->tiles[0][4]);
 	board->kings[1] = &(board->tiles[7][4]);
+
+	board->chance = WHITE;
 }
 
-
+/* 
 void copy_board (board_t *dest_board, const board_t *src_board) {
 	if (dest_board == NULL)
 		return;
@@ -116,4 +118,4 @@ void delete_board (board_t *board) {
 				free(board->tiles[i][j].piece);
 	
 	free(board);
-}
+} */

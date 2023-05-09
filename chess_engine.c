@@ -79,15 +79,15 @@ static	const tile_t**	bishop_moves		(const board_t *board, const tile_t *tile);
 static	const tile_t**	knight_moves		(const board_t *board, const tile_t *tile);
 static	const tile_t**	pawn_moves			(const board_t *board, const tile_t *tile);
 static	const tile_t**	find_all_moves		(const board_t *board, const tile_t *tile);
-static	void			clear_dest			(board_t *board);
-static	void			set_dest			(board_t *board, tile_t ** moves);
+// static	void			clear_dest			(board_t *board);
+// static	void			set_dest			(board_t *board, tile_t ** moves);
 static	void			update_check_map	(board_t *board);
 static	bool			is_valid_move		(board_t board, short *dest_tile, short *src_tile);
 // static void		find_pin		(const board_t *board, const tile_t *tile);
 
 
 const tile_t** find_moves(const board_t *board, const tile_t *tile) {
-	clear_dest(board);
+// 	clear_dest(board);
 
 	const tile_t **all_moves = find_all_moves(board, tile);
 	if (all_moves == NULL)
@@ -118,13 +118,18 @@ const tile_t** find_moves(const board_t *board, const tile_t *tile) {
 
 	free(all_moves);
 
+	if (k == 0) {
+		free(moves);
+		moves = NULL;
+	}
+
 /* 	memcpy(board, dup_board, sizeof(board_t));
 // 	free(dup_board);
 	delete_board(dup_board);
 
 	clear_dest(board); */
 
-	set_dest(board, moves);
+// 	set_dest(board, moves);
 
 	return moves;
 }
@@ -164,7 +169,61 @@ bool move_piece (board_t *board, short *dest_tile, short *src_tile) {
 	if (piece_face & KING)
 		board->kings[piece_face & BLACK ? 1: 0] = &(board->tiles[r2][c2]);
 
+// 	update_check_map(board); // no need to update here since updating before every possible move
+
+	board->chance = (board->chance == WHITE ? BLACK: WHITE);
+
+	return true;
+}
+
+
+void clear_dest (board_t *board) {
+	for (short i = 0; i < 8; i++) {
+		for (short j = 0; j < 8; j++) {
+			board->tiles[i][j].can_be_dest = false;
+		}
+	}
+}
+
+
+void set_dest (board_t *board, tile_t **moves) {
+	if (moves == NULL)
+		return;
+	for (int i = 0; i < MAX_MOVES && moves[i] != NULL; i++) {
+		moves[i]->can_be_dest = true;
+	}
+}
+
+
+bool is_game_finished (board_t *board) {
+	color_t color = (board->chance & BLACK ? 1: 0);
 	update_check_map(board);
+	bool is_check = board->kings[color]->has_check[color];
+
+	for (short i = 0; i < 8; i++) {
+		for (short j = 0; j < 8; j++) {
+			if (board->tiles[i][j].piece == NULL)
+				continue;
+
+			color_t piece_color = board->tiles[i][j].piece->face & BLACK ? 1: 0;
+			if (piece_color != color)
+				continue;
+
+			const tile_t **moves = find_moves(board, &board->tiles[i][j]);
+			bool move_exists = (moves != NULL);
+			free(moves);
+
+			if (move_exists) {
+				board->result = PENDING;
+				return false;
+			}
+		}
+	}
+
+	if (is_check)
+		board->result = (board->chance == WHITE ? BLACK_WON: WHITE_WON);
+	else
+		board->result = STALE_MATE;
 
 	return true;
 }
@@ -485,22 +544,6 @@ static const tile_t** find_all_moves (const board_t *board, const tile_t *tile) 
 	// search for pinning tile in all_moves
 
 	return all_moves;
-}
-
-
-static void clear_dest (board_t *board) {
-	for (short i = 0; i < 8; i++) {
-		for (short j = 0; j < 8; j++) {
-			board->tiles[i][j].can_be_dest = false;
-		}
-	}
-}
-
-
-static void set_dest (board_t *board, tile_t **moves) {
-	for (int i = 0; i < MAX_MOVES && moves[i] != NULL; i++) {
-		moves[i]->can_be_dest = true;
-	}
 }
 
 

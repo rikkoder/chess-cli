@@ -28,6 +28,8 @@ typedef uint32_t		face_t;
 typedef bool			color_t;
 typedef struct tile_t	tile_t;
 
+enum result { STALE_MATE, WHITE_WON, BLACK_WON, PENDING };
+
 typedef struct {
 	face_t face;
 	bool is_moved;
@@ -47,13 +49,15 @@ typedef struct tile_t {
 typedef struct board_t {
 	tile_t tiles[8][8];
 	tile_t *kings[2];
+	chance_t chance;
+	enum result result;
 } board_t;
 
 
 piece_t*	init_piece		(short i, short j);
 wchar_t		get_piece_face	(const piece_t *piece);
 void		init_board		(board_t *board);
-void		copy_board		(board_t *dest_board, const board_t *src_board);
+// void		copy_board		(board_t *dest_board, const board_t *src_board);
 
 
 #endif

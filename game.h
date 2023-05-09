@@ -6,11 +6,11 @@
 
 // without boxes
 #define initialize_without_box(x)	{x = newwin(x##_h, x##_w, x##_y, x##_x); keypad(x, true);}
-#define translate_without_box(x)		{wresize(x, x##_h, x##_w); mvwin(x, x##_y, x##_x); wclear(x);}
+#define translate_without_box(x)	{wresize(x, x##_h, x##_w); mvwin(x, x##_y, x##_x); wclear(x);}
 
 // with boxes
 #define initialize_with_box(x)	{x = newwin(x##_h, x##_w, x##_y, x##_x); keypad(x, true); box(x, 0, 0);}
-#define translate_with_box(x)		{wresize(x, x##_h, x##_w); mvwin(x, x##_y, x##_x); wclear(x); box(x, 0, 0);}
+#define translate_with_box(x)	{wresize(x, x##_h, x##_w); mvwin(x, x##_y, x##_x); wclear(x); box(x, 0, 0);}
 
 // to make stdscr compatible with init and trans macros
 #define stdscr_h term_h
@@ -95,6 +95,10 @@
 #define hud_scr_w (game_scr_w - board_scr_w - 3 * INNER_PAD_w)
 #define hud_scr_y board_scr_y
 #define hud_scr_x (board_scr_x + board_scr_w + INNER_PAD_w)
+#define game_over_scr_h 10
+#define game_over_scr_w htow(game_over_scr_h)
+#define game_over_scr_y ((term_h - game_over_scr_h) / 2)	// center of screen
+#define game_over_scr_x ((term_w - game_over_scr_w) / 2)	// center of screen
 
 
 #endif
