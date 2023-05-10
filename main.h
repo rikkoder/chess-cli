@@ -1,10 +1,6 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-// dynamic
-// # define htow(h) ((term_w*1080)/(term_h*1920) *(h))
-
-// static
 #define htow(h) (2*h)
 
 

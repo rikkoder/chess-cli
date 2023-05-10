@@ -5,7 +5,7 @@
 #include "game.h"
 
 
-static WINDOW *main_menu;
+static WINDOW *main_menu_scr;
 static int term_h, term_w;
 
 void init_main_menu() {
@@ -24,17 +24,14 @@ void init_main_menu() {
 	int selected_opt = 0;
 
 	// custom macro in game.h to create new win with parameters associated with window's name
-	initialize_with_box(main_menu);
+	initialize_with_box(main_menu_scr);
 	wrefresh(stdscr);
-	wrefresh(main_menu);
+	wrefresh(main_menu_scr);
 
 	while (true) {
 		if (key == KEY_RESIZE) {
-#ifdef PDCURSES
-			resize_term(0, 0);
-#endif
 			getmaxyx(stdscr, term_h, term_w);
-			translate_with_box(main_menu);
+			translate_with_box(main_menu_scr);
 			wclear(stdscr);
 		}
 
@@ -45,24 +42,19 @@ void init_main_menu() {
 		else if (key == '\n' || key == '\r' || key == KEY_ENTER) {
 			if (selected_opt == 0) {
 				// clear before displaying game
-				wclear(main_menu);
-				wrefresh(main_menu);
+				wclear(main_menu_scr);
+				wrefresh(main_menu_scr);
 
 				init_game();
 
 				// redrawing after end of game
 				// size may have changed while playing game
 				getmaxyx(stdscr, term_h, term_w);
-				translate_with_box(main_menu);
+				translate_with_box(main_menu_scr);
 				wclear(stdscr);
-// 				wresize(main_menu, main_menu_h, main_menu_w);
-// 				mvwin(main_menu, (window_h - main_menu_h)/2, (window_w - main_menu_w)/2);
-// 				wclear(stdscr);
-// 				wclear(main_menu);
-// 				box(main_menu, 0, 0);
 			}
 			else {
-				delwin(main_menu);
+				delwin(main_menu_scr);
 				return ;
 			}
 		}
@@ -70,16 +62,17 @@ void init_main_menu() {
 
 		for (int i=0; i<NO_OF_OPTS; i++) {
 			if (i == selected_opt)
-				wattron(main_menu, A_STANDOUT);
+				wattron(main_menu_scr, A_STANDOUT);
 			else
-				wattroff(main_menu, A_STANDOUT);
+				wattroff(main_menu_scr, A_STANDOUT);
 
-			mvwaddnwstr(main_menu, main_menu_h/2 - NO_OF_OPTS/2 + i, main_menu_w/2 - (OPTS_SIZE-1)/2, woptions[i], OPTS_SIZE);
+			mvwaddnwstr(main_menu_scr, main_menu_scr_h/2 - NO_OF_OPTS/2 + i, main_menu_scr_w/2 - (OPTS_SIZE-1)/2, woptions[i], OPTS_SIZE);
 		}
 
 		wrefresh(stdscr);
-		wrefresh(main_menu);
-		key = wgetch(main_menu);
+		wrefresh(main_menu_scr);
+		key = wgetch(main_menu_scr);
 	}
 
+	delwin(main_menu_scr);
 }

@@ -33,7 +33,6 @@ enum result { STALE_MATE, WHITE_WON, BLACK_WON, PENDING };
 typedef struct {
 	face_t face;
 	bool is_moved;
-	// tile_t *pinned_by;
 } piece_t ;
 
 typedef struct tile_t {
@@ -42,8 +41,6 @@ typedef struct tile_t {
 	piece_t *piece;
 	bool can_be_dest;
 	bool has_check[2];
-	// bool check_for_white;
-	// bool check_for_black;
 } tile_t;
 
 typedef struct board_t {

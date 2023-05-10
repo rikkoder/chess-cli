@@ -28,39 +28,6 @@
 
 #ifndef MAIN_MENU_H
 
-// for dynamic sizing
-/*
-#define PAD 2
-#define game_scr_h (term_h - 2 * PAD)
-#define game_scr_w (term_w - 2 * PAD)
-#define game_scr_y 2
-#define game_scr_x 2
-#define menu_scr_h 3
-#define menu_scr_w game_scr_w
-#define menu_scr_y (game_scr_y + game_scr_h - menu_scr_h)
-#define menu_scr_x game_scr_x
-#define tile_size ((game_scr_h - 4 * PAD - menu_scr_h) / 11)
-#define plr_h (tile_size + 2 * PAD)
-#define plr_w game_scr_w
-#define plr1_scr_h plr_h	// for makewin compatibility
-#define plr1_scr_w plr_w	// for makewin compatibility
-#define plr1_scr_y game_scr_y
-#define plr1_scr_x game_scr_x
-#define board_scr_h (9 * tile_size)
-#define board_scr_w (9 * tile_size + 2 * PAD)
-#define board_scr_y (plr1_scr_y + plr_h)
-#define board_scr_x game_scr_x
-#define plr2_scr_h plr_h	// for makewin compatibility
-#define plr2_scr_w plr_w	// for makewin compatibility
-#define plr2_scr_y (board_scr_y + board_scr_h)
-#define plr2_scr_x game_scr_x
-#define hud_scr_h board_scr_h
-#define hud_scr_w (game_scr_w - board_scr_w)
-#define hud_scr_y board_scr_y
-#define hud_scr_x (board_scr_x + board_scr_w)
-*/
-
-// for static sizing
 #define PAD_h 0
 #define PAD_w htow(PAD_h)
 #define INNER_PAD_h 1
