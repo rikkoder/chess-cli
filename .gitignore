@@ -1,2 +1,4 @@
+.gitignore
 Session.vim
 chess-cli
+gdb.txt

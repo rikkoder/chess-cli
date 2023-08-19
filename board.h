@@ -54,7 +54,8 @@ typedef struct board_t {
 piece_t*	init_piece		(short i, short j);
 wchar_t		get_piece_face	(const piece_t *piece);
 void		init_board		(board_t *board);
-// void		copy_board		(board_t *dest_board, const board_t *src_board);
+void		copy_board		(board_t *dest_board, const board_t *src_board);
+void		delete_board	(board_t *board);
 
 
 #endif

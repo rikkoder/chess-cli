@@ -20,7 +20,7 @@ piece_t* init_piece(short i, short j) {
 	if (i > 1 && i < 6)
 		return NULL;
 
-	piece_t *piece = malloc(sizeof(piece_t));
+	piece_t *piece = (piece_t*) malloc(sizeof(piece_t));
 	memset(piece, 0, sizeof(piece_t));
 
 	piece->face |= UNICODE;
@@ -79,7 +79,7 @@ void init_board(board_t *board) {
 	board->chance = WHITE;
 }
 
-/* 
+
 void copy_board (board_t *dest_board, const board_t *src_board) {
 	if (dest_board == NULL)
 		return;
@@ -93,9 +93,9 @@ void copy_board (board_t *dest_board, const board_t *src_board) {
 	memcpy(dest_board, src_board, sizeof(board_t));
 	for (short i = 0; i < 8; i++) {
 		for (short j = 0; j < 8; j++) {
-			if (dest_board->tiles[i][j].piece == NULL) // || dest_board->tiles[i][j].piece != src_board->tiles[i][j].piece)
+			if (dest_board->tiles[i][j].piece == NULL)
 				continue;
-			dest_board->tiles[i][j].piece = malloc(sizeof(piece_t));
+			dest_board->tiles[i][j].piece = (piece_t*) malloc(sizeof(piece_t));
 			memcpy(dest_board->tiles[i][j].piece, src_board->tiles[i][j].piece, sizeof(piece_t));
 		}
 	}
@@ -118,4 +118,4 @@ void delete_board (board_t *board) {
 				free(board->tiles[i][j].piece);
 	
 	free(board);
-} */
+}

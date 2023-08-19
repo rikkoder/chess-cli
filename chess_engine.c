@@ -5,7 +5,7 @@
 #include "utilities.h"
 
 #define INIT_ADD_MOVES \
-	tile_t **moves = malloc(MAX_MOVES * sizeof(tile_t*));\
+	tile_t **moves = (tile_t**) malloc(MAX_MOVES * sizeof(tile_t*));\
 	memset(moves, 0, MAX_MOVES * sizeof(tile_t*));\
  	int idx = 0;\
 	face_t color = (tile->piece->face & BLACK);\
@@ -76,20 +76,20 @@ static	tile_t**	queen_moves			(board_t *board, const tile_t *tile);
 static	tile_t**	rook_moves			(board_t *board, const tile_t *tile);
 static	tile_t**	bishop_moves		(board_t *board, const tile_t *tile);
 static	tile_t**	knight_moves		(board_t *board, const tile_t *tile);
-static	tile_t**	pawn_moves			(board_t *board, const tile_t *tile);
-static	tile_t**	find_all_moves		(board_t *board, const tile_t *tile);
+static	tile_t**	pawn_moves			(board_t *board, const tile_t *tile, const history_t *history);
+static	tile_t**	find_all_moves		(board_t *board, const tile_t *tile, const history_t *history);
 static	void		update_check_map	(board_t *board);
 static	bool		is_valid_move		(board_t board, short *dest_tile, short *src_tile);
 
 
-tile_t** find_moves(board_t *board, const tile_t *tile) {
-	tile_t **all_moves = find_all_moves(board, tile);
+tile_t** find_moves(board_t *board, const tile_t *tile, const history_t *history) {
+	tile_t **all_moves = find_all_moves(board, tile, history);
 	if (all_moves == NULL)
 		return NULL;
 
 	short src_tile[2] = {tile->row, tile->col};
 
-	tile_t **moves = malloc(MAX_MOVES * sizeof(tile_t*));
+	tile_t **moves = (tile_t**) malloc(MAX_MOVES * sizeof(tile_t*));
 	memset(moves, 0, MAX_MOVES * sizeof(tile_t*));
 	int k = 0;
 	for (int i = 0; i < MAX_MOVES && all_moves[i] != NULL; i++) {
@@ -109,7 +109,7 @@ tile_t** find_moves(board_t *board, const tile_t *tile) {
 }
 
 
-bool move_piece (board_t *board, short *dest_tile, short *src_tile) {
+bool move_piece (board_t *board, short *dest_tile, short *src_tile, history_t *history) {
 	short r1 = src_tile[0], c1 = src_tile[1], r2 = dest_tile[0], c2 = dest_tile[1];
 	// invalid tiles
 	if (r1 == INVALID_ROW || r2 == INVALID_ROW || c1 == INVALID_COL || c2 == INVALID_COL || board->tiles[r1][c1].piece == NULL)
@@ -131,7 +131,7 @@ bool move_piece (board_t *board, short *dest_tile, short *src_tile) {
 			rook_src[1] = 7;
 			rook_dest[1] = 5;
 		}
-		move_piece(board, rook_dest, rook_src);
+		move_piece(board, rook_dest, rook_src, NULL);
 	}
 
 	board->tiles[r2][c2].piece = board->tiles[r1][c1].piece;
@@ -144,6 +144,9 @@ bool move_piece (board_t *board, short *dest_tile, short *src_tile) {
 		board->kings[piece_face & BLACK ? 1: 0] = &(board->tiles[r2][c2]);
 
 	board->chance = (board->chance == WHITE ? BLACK: WHITE);
+
+	if (history)
+		add_move(history, board);
 
 	return true;
 }
@@ -167,7 +170,7 @@ void set_dest (board_t *board, tile_t **moves) {
 }
 
 
-bool is_game_finished (board_t *board) {
+bool is_game_finished (board_t *board, const history_t *history) {
 	color_t color = (board->chance & BLACK ? 1: 0);
 	update_check_map(board);
 	bool is_check = board->kings[color]->has_check[color];
@@ -181,7 +184,7 @@ bool is_game_finished (board_t *board) {
 			if (piece_color != color)
 				continue;
 
-			tile_t **moves = find_moves(board, &board->tiles[i][j]);
+			tile_t **moves = find_moves(board, &board->tiles[i][j], history);
 			bool move_exists = (moves != NULL);
 			free(moves);
 
@@ -229,7 +232,7 @@ static tile_t** king_moves (board_t *board, const tile_t *tile) {
 	if (CHECK_AT(tile) || tile->piece->is_moved)
 		return moves;
 
-	if (!(board->tiles[row][0].piece->is_moved)) {
+	if (board->tiles[row][0].piece != NULL && !(board->tiles[row][0].piece->is_moved)) {
 		bool flag = true;
 		dest = &board->tiles[row][1];
 		if (dest->piece != NULL)
@@ -244,7 +247,7 @@ static tile_t** king_moves (board_t *board, const tile_t *tile) {
 			moves[idx++] = &board->tiles[row][col-2];
 	} 
 
-	if (!(board->tiles[row][7].piece->is_moved)) {
+	if (board->tiles[row][7].piece != NULL && !(board->tiles[row][7].piece->is_moved)) {
 		bool flag = true;
 		dest = &board->tiles[row][5];
 		if (dest->piece != NULL || CHECK_AT(dest))
@@ -320,12 +323,12 @@ static tile_t** knight_moves (board_t *board, const tile_t *tile) {
 }
 
 
-static tile_t** pawn_moves (board_t *board, const tile_t *tile) {
+static tile_t** pawn_moves (board_t *board, const tile_t *tile, const history_t *history) {
 	INIT_ADD_MOVES;
 
 	if (color == BLACK) {
 		// double step
-		if (row == 6 && board->tiles[row-2][col].piece == NULL)
+		if (row == 6 && board->tiles[row-1][col].piece == NULL && board->tiles[row-2][col].piece == NULL)
 			moves[idx++] = &board->tiles[row-2][col];
 
 		// single step
@@ -339,8 +342,23 @@ static tile_t** pawn_moves (board_t *board, const tile_t *tile) {
 				continue;
 			dest = &board->tiles[row-1][col+i];
 			dest_face = (dest->piece ? dest->piece->face : NO_PIECE);
-			if (dest_face != NO_PIECE && !((dest_face & BLACK) == color))
+			if (dest_face != NO_PIECE && !((dest_face & BLACK) == color)) {
 				moves[idx++] = dest;
+				continue;
+			}
+
+			// en passant
+/* 			if (history == NULL || row != 4)
+				continue;
+			tile_t side_tile = board->tiles[row][col+i];
+			face_t side_face = (side_tile.piece ? side_tile.piece->face : NO_PIECE);
+			if ((side_face & PAWN) && !((side_face & BLACK) == color)) {
+				const board_t *prev_move_board = peek(history, 2);
+				tile_t enemy_pawn_origin = prev_move_board->tiles[6][col+i];
+				face_t enemy_pawn_origin_face = (enemy_pawn_origin.piece ? enemy_pawn_origin.piece->face : NO_PIECE);
+				if ((enemy_pawn_origin_face & PAWN) && !((enemy_pawn_origin_face & BLACK) == color))
+					moves[idx++] = dest;
+			} */
 		}
 
 		// en passant
@@ -371,7 +389,7 @@ static tile_t** pawn_moves (board_t *board, const tile_t *tile) {
 }
 
 
-static tile_t** find_all_moves (board_t *board, const tile_t *tile) {
+static tile_t** find_all_moves (board_t *board, const tile_t *tile, const history_t *history) {
 	// no piece at tile to move
 	if (tile->piece == NULL)
 		return NULL;
@@ -398,7 +416,7 @@ static tile_t** find_all_moves (board_t *board, const tile_t *tile) {
 			all_moves = knight_moves(board, tile);
 			break;
 		case PAWN:
-			all_moves = pawn_moves(board, tile);
+			all_moves = pawn_moves(board, tile, history);
 	}
 
 	return all_moves;
@@ -426,7 +444,7 @@ static void update_check_map (board_t *board) {
 			int type = 1;
 			while (!(tile->piece->face & type)) type <<= 1;
 			if (type == PAWN) {
-				moves = malloc(2 * sizeof(tile_t*));
+				moves = (tile_t**) malloc(2 * sizeof(tile_t*));
 				memset(moves, 0, 2 * sizeof(tile_t*));
 
 				int row = i + 1;
@@ -442,7 +460,7 @@ static void update_check_map (board_t *board) {
 					moves[1] = &(board->tiles[row][j+1]);
 				}
 			} else {
-				moves = find_all_moves(board, tile);
+				moves = find_all_moves(board, tile, NULL);
 			}
 
 

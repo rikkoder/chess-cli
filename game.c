@@ -5,6 +5,7 @@
 #include "utilities.h"
 #include "board.h"
 #include "chess_engine.h"
+#include "history.h"
 
 
 static	WINDOW			*game_scr;
@@ -23,8 +24,9 @@ static	void	game_over		(const board_t *board);
 static	void	del_game_wins	(void);
 
 void init_game() {
-	board_t board;
-	init_board(&board);
+	board_t *board = (board_t *) malloc(sizeof(board_t));
+	history_t *history = create_history();
+	init_board(board);
 	tile_t	**moves = NULL;
 	int key = -1;
 	onboard = true;
@@ -63,21 +65,21 @@ void init_game() {
 		} else if (onboard) {
 			if (key == '\n' || key == '\r' || key == KEY_ENTER) {
 				if (sel_tile[0] != INVALID_ROW && sel_tile[1] != INVALID_ROW) {
-					if (move_piece(&board, cur_tile, sel_tile) && is_game_finished(&board)) {
-						game_over(&board);
+					if (move_piece(board, cur_tile, sel_tile, history) && is_game_finished(board, history)) {
+						game_over(board);
 						break;
 					}
 
-					clear_dest(&board);
+					clear_dest(board);
 					sel_tile[0] = INVALID_ROW;
 					sel_tile[1] = INVALID_COL;
 					if (moves != NULL)
 						free(moves);
-				} else if (board.tiles[cur_tile[0]][cur_tile[1]].piece != NULL && (board.tiles[cur_tile[0]][cur_tile[1]].piece->face & COLOR_BIT) == board.chance){
+				} else if (board->tiles[cur_tile[0]][cur_tile[1]].piece != NULL && (board->tiles[cur_tile[0]][cur_tile[1]].piece->face & COLOR_BIT) == board->chance){
 					sel_tile[0] = cur_tile[0];
 					sel_tile[1] = cur_tile[1];
-					moves = find_moves(&board, &board.tiles[sel_tile[0]][sel_tile[1]]);
-					set_dest(&board, moves);
+					moves = find_moves(board, &board->tiles[sel_tile[0]][sel_tile[1]], history);
+					set_dest(board, moves);
 				}
 			} else if ( key == KEY_UP || key == 'k') {
 				if (cur_tile[0] < 7) cur_tile[0]++;
@@ -99,7 +101,7 @@ void init_game() {
 				if ((tile_row + tile_col)%2 == 0)
 					wattron(board_scr, A_STANDOUT);
 				if (i < 8 && j > 0)
-					draw_tile(i, j, (tile_row == cur_tile[0] && tile_col == cur_tile[1]), (tile_row == sel_tile[0] && tile_col == sel_tile[1]), board.tiles[tile_row][tile_col].can_be_dest);
+					draw_tile(i, j, (tile_row == cur_tile[0] && tile_col == cur_tile[1]), (tile_row == sel_tile[0] && tile_col == sel_tile[1]), board->tiles[tile_row][tile_col].can_be_dest);
 				wattroff(board_scr, A_STANDOUT);
 
 				if (i == 8) {
@@ -107,13 +109,16 @@ void init_game() {
 					c[0] = 'A'+(j-1);
 					mvwaddstr(board_scr, i*(tile_size_h + TILE_PAD_h) + tile_size_h/2, j*(tile_size_w + TILE_PAD_w) + tile_size_w/2, c);
 				} else if (j == 0) {
-					mvwaddstr(board_scr, i*(tile_size_h + TILE_PAD_h) + tile_size_h/2, j*(tile_size_w + TILE_PAD_w) + tile_size_w/2, itoa(8-i));
+					char a[20];
+					memset(a, 0, 20);
+					itoa(8-i, a);
+					mvwaddstr(board_scr, i*(tile_size_h + TILE_PAD_h) + tile_size_h/2, j*(tile_size_w + TILE_PAD_w) + tile_size_w/2, a);
 				} else {
 					wattron(board_scr, A_BOLD);
 					if ((tile_row + tile_col)%2 == 0) wattron(board_scr, A_STANDOUT);
 
 					wchar_t piece[2] = {0};
-					piece[0] = get_piece_face(board.tiles[tile_row][tile_col].piece);
+					piece[0] = get_piece_face(board->tiles[tile_row][tile_col].piece);
 					mvwaddwstr(board_scr, i*(tile_size_h + TILE_PAD_h) + tile_size_h/2, j*(tile_size_w + TILE_PAD_w) + tile_size_w/2, piece);
 
 					wattroff(board_scr, A_STANDOUT);
@@ -131,6 +136,8 @@ void init_game() {
 		key = wgetch(game_scr);
 	}
 
+	delete_board(board);
+	delete_history(history);
 	del_game_wins();
 }
 
@@ -173,7 +180,7 @@ static void game_over (const board_t *board) {
 	if (board->result == PENDING)
 		return;
 
-	del_game_wins();
+// 	del_game_wins();
 
 	initialize_with_box(game_over_scr);
 
