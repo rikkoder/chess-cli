@@ -98,7 +98,7 @@ void init_game() {
 				int tile_row = 7-i, tile_col = j-1;
 
 				wattroff(board_scr, A_BOLD);
-				if ((tile_row + tile_col)%2 == 0)
+				if ((tile_row + tile_col)%2 != 0)
 					wattron(board_scr, A_STANDOUT);
 				if (i < 8 && j > 0)
 					draw_tile(i, j, (tile_row == cur_tile[0] && tile_col == cur_tile[1]), (tile_row == sel_tile[0] && tile_col == sel_tile[1]), board->tiles[tile_row][tile_col].can_be_dest);
@@ -115,7 +115,7 @@ void init_game() {
 					mvwaddstr(board_scr, i*(tile_size_h + TILE_PAD_h) + tile_size_h/2, j*(tile_size_w + TILE_PAD_w) + tile_size_w/2, a);
 				} else {
 					wattron(board_scr, A_BOLD);
-					if ((tile_row + tile_col)%2 == 0) wattron(board_scr, A_STANDOUT);
+					if ((tile_row + tile_col)%2 != 0) wattron(board_scr, A_STANDOUT);
 
 					wchar_t piece[2] = {0};
 					piece[0] = get_piece_face(board->tiles[tile_row][tile_col].piece);
