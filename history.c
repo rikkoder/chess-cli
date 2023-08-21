@@ -80,3 +80,8 @@ const board_t* peek (const history_t *history, int n) {
 
 	return curr->board;
 }
+
+
+int get_size (const history_t *history) {
+	return history->size;
+}

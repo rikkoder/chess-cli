@@ -11,6 +11,7 @@ void			undo			(history_t *history);
 void			go_back			(history_t *history, int n);
 void			delete_history	(history_t *history);
 const board_t*	peek			(const history_t *history, int n);
+int				get_size		(const history_t *history);
 
 
 #endif

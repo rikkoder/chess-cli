@@ -19,7 +19,7 @@
 #define KNIGHT		(1 << 4)
 #define PAWN		(1 << 5)
 
-#define NO_PIECE -1
+#define NO_PIECE 0
 #define INVALID_ROW -1
 #define INVALID_COL -1
 
