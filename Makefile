@@ -10,11 +10,12 @@ CFLAGS += -Wall
 CC = gcc
 DEBUGFLAGS = -g3 -O0
 
-.PHONY: install debug clean
+.PHONY: install debug clean uninstall
 install: $(PROGRAM)
 
 $(PROGRAM): $(SRC)
 	$(CC) $(CFLAGS) -o $(PROGRAM) $(SRC) $(LDFLAGS)
+	cp $(PROGRAM) $(HOME)/.local/bin
 
 debug:
 	$(CC) $(CFLAGS) $(DEBUGFLAGS) -o $(PROGRAM) $(SRC) $(LDFLAGS)
@@ -22,3 +23,5 @@ debug:
 clean:
 	rm $(PROGRAM)
 
+uninstall: clean
+	rm $(HOME)/.local/bin/$(PROGRAM)

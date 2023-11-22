@@ -20,7 +20,7 @@ static	int				term_w;
 static	bool			onboard;
 
 static	void					draw_tile		(int y, int x, bool is_cur, bool is_sel, bool is_avail);
-static	enum game_return_code	game_over		(const board_t *board);
+static	enum game_return_code	game_over		(board_t *board, history_t *history);
 static	void					del_game_wins	(void);
 static	void					show_history	(history_t *history);
 
@@ -71,7 +71,7 @@ enum game_return_code init_game() {
 						show_history(history);
 						//if (is_game_finished(board, history)) {
 						if (board->result != PENDING) { // result is calculated in move_piece
-							if ((return_code = game_over(board)) != CONTINUE)
+							if ((return_code = game_over(board, history)) != CONTINUE)
 								break;
 						}
 					}
@@ -184,7 +184,7 @@ static void draw_tile(int y, int x, bool is_cur, bool is_sel, bool can_be_dest) 
 }
 
 
-static enum game_return_code game_over (const board_t *board) {
+static enum game_return_code game_over (board_t *board, history_t * history) {
 	if (board->result == PENDING)
 		return CONTINUE;
 
@@ -244,7 +244,8 @@ static enum game_return_code game_over (const board_t *board) {
 		}
 		else if (key == '\n' || key == '\r' || key == KEY_ENTER) {
 			if (selected_opt == UNDO_OPT) {
-				// undo();
+				undo(history);
+				copy_board(board, peek_board(history, 0));
 				return CONTINUE;
 			}
 			else if (selected_opt == SAVE_OPT) {
