@@ -45,7 +45,10 @@ void init_main_menu() {
 				wclear(main_menu_scr);
 				wrefresh(main_menu_scr);
 
-				init_game();
+				enum game_return_code return_code;
+				do {
+					 return_code = init_game();
+				} while (return_code == RESTART);
 
 				// redrawing after end of game
 				// size may have changed while playing game

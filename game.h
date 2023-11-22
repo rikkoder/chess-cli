@@ -71,7 +71,9 @@
 #endif
 
 
-void	init_game	();
+enum game_return_code	{QUIT, RESTART, CONTINUE};
+
+enum game_return_code	init_game	();
 
 
 #endif

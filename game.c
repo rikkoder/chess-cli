@@ -19,11 +19,13 @@ static	int				term_h;
 static	int				term_w;
 static	bool			onboard;
 
-static	void	draw_tile		(int y, int x, bool is_cur, bool is_sel, bool is_avail);
-static	void	game_over		(const board_t *board);
-static	void	del_game_wins	(void);
+static	void					draw_tile		(int y, int x, bool is_cur, bool is_sel, bool is_avail);
+static	enum game_return_code	game_over		(const board_t *board);
+static	void					del_game_wins	(void);
+static	void					show_history	(history_t *history);
 
-void init_game() {
+enum game_return_code init_game() {
+	enum game_return_code return_code = QUIT;
 	board_t *board = (board_t *) malloc(sizeof(board_t));
 	history_t *history = create_history();
 	init_board(board);
@@ -65,9 +67,13 @@ void init_game() {
 		} else if (onboard) {
 			if (key == '\n' || key == '\r' || key == KEY_ENTER) {
 				if (sel_tile[0] != INVALID_ROW && sel_tile[1] != INVALID_ROW) {
-					if (move_piece(board, cur_tile, sel_tile, history) && is_game_finished(board, history)) {
-						game_over(board);
-						break;
+					if (move_piece(board, cur_tile, sel_tile, history)) {
+						show_history(history);
+						//if (is_game_finished(board, history)) {
+						if (board->result != PENDING) { // result is calculated in move_piece
+							if ((return_code = game_over(board)) != CONTINUE)
+								break;
+						}
 					}
 
 					clear_dest(board);
@@ -139,6 +145,8 @@ void init_game() {
 	delete_board(board);
 	delete_history(history);
 	del_game_wins();
+
+	return return_code;
 }
 
 static void draw_tile(int y, int x, bool is_cur, bool is_sel, bool can_be_dest) {
@@ -176,23 +184,27 @@ static void draw_tile(int y, int x, bool is_cur, bool is_sel, bool can_be_dest) 
 }
 
 
-static void game_over (const board_t *board) {
+static enum game_return_code game_over (const board_t *board) {
 	if (board->result == PENDING)
-		return;
+		return CONTINUE;
 
 // 	del_game_wins();
 
 	initialize_with_box(game_over_scr);
 
+	bool is_saved = false;
+
 	const int NO_OF_OPTS = 4;
 	const int OPTS_SIZE = 12;
 
+	enum {UNDO_OPT, SAVE_OPT, RESTART_OPT, MAIN_MENU_OPT};
+
 	// initialize options
 	char options[NO_OF_OPTS][OPTS_SIZE+1];
-	snprintf(options[0], OPTS_SIZE, "%-11s", "Undo");
-	snprintf(options[1], OPTS_SIZE, "%-11s", "Save");
-	snprintf(options[2], OPTS_SIZE, "%-11s", "Restart");
-	snprintf(options[3], OPTS_SIZE, "%-11s", "Main Menu");
+	snprintf(options[UNDO_OPT], OPTS_SIZE, "%-11s", "Undo");
+	snprintf(options[SAVE_OPT], OPTS_SIZE, "%-11s", "Save");
+	snprintf(options[RESTART_OPT], OPTS_SIZE, "%-11s", "Restart");
+	snprintf(options[MAIN_MENU_OPT], OPTS_SIZE, "%-11s", "Main Menu");
 	int selected_opt = 0;
 
 	const int RESULT_SIZE = 20;
@@ -220,19 +232,33 @@ static void game_over (const board_t *board) {
 			wclear(stdscr);
 		}
 
-		if (key == KEY_UP || key == 'k')
+		if (key == KEY_UP || key == 'k') {
 			selected_opt = (selected_opt-1 + NO_OF_OPTS) % NO_OF_OPTS;
-		else if (key == KEY_DOWN || key == 'j')
+			if (selected_opt == SAVE_OPT && is_saved)
+				selected_opt = (selected_opt-1 + NO_OF_OPTS) % NO_OF_OPTS;
+		}
+		else if (key == KEY_DOWN || key == 'j') {
 			selected_opt = (selected_opt+1) % NO_OF_OPTS;
+			if (selected_opt == SAVE_OPT && is_saved)
+				selected_opt = (selected_opt+1) % NO_OF_OPTS;
+		}
 		else if (key == '\n' || key == '\r' || key == KEY_ENTER) {
-			if (selected_opt == 2) {
-				delwin(game_over_scr);
-				init_game();
-				return;
+			if (selected_opt == UNDO_OPT) {
+				// undo();
+				return CONTINUE;
 			}
-			else if (selected_opt == 3) {
+			else if (selected_opt == SAVE_OPT) {
+				// save();
+				is_saved = true;
+				snprintf(options[SAVE_OPT], OPTS_SIZE, "%-11s", "Saved");
+			}
+			else if (selected_opt == RESTART_OPT) {
 				delwin(game_over_scr);
-				return ;
+				return RESTART;
+			}
+			else if (selected_opt == MAIN_MENU_OPT) {
+				delwin(game_over_scr);
+				return QUIT;
 			}
 		}
 
@@ -249,6 +275,9 @@ static void game_over (const board_t *board) {
 		wrefresh(game_over_scr);
 		key = wgetch(game_over_scr);
 	}
+
+	// failsafe
+	return QUIT;
 }
 
 
@@ -259,4 +288,20 @@ static void del_game_wins (void) {
 	delwin(plr2_scr);
 	delwin(board_scr);
 	delwin(hud_scr);
+}
+
+
+static void show_history (history_t *history) {
+	wclear(hud_scr);
+	box(hud_scr, 0, 0);
+	int sz = min(get_size(history), hud_scr_h - 2);
+	float move_no = get_size(history) - sz + 0.5;
+	int move_display_max_size = MAX_MOVE_NOTATION_SIZE + 5;
+	for (int i=1; i<=sz; i++) {
+		char s[move_display_max_size];
+		snprintf(s, move_display_max_size, "%.1f  %s", move_no, peek_move(history, sz-i));
+		mvwaddnstr(hud_scr, i, 1, s, move_display_max_size);
+		move_no += 0.5;
+	}
+	wrefresh(hud_scr);
 }

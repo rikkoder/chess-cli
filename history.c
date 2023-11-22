@@ -13,7 +13,10 @@ struct history_t {
 struct board_node_t {
 	board_node_t *prev;
 	board_t *board;
+	char move_notation[MAX_MOVE_NOTATION_SIZE];
 };
+
+static	const board_node_t*		peek	(const history_t *history, int n);
 
 
 history_t* create_history (void) {
@@ -27,13 +30,14 @@ history_t* create_history (void) {
 }
 
 
-void add_move (history_t *history, const board_t *board) {
+void add_move (history_t *history, const board_t *board, const char *const move_notation) {
 	board_node_t *board_node = (board_node_t*) malloc(sizeof(board_node_t));
 	memset(board_node, 0, sizeof(board_node_t));
 
 	board_node->prev = history->top;
 	board_node->board = (board_t*) malloc(sizeof(board_t));
 	copy_board(board_node->board, board);
+	strncpy(board_node->move_notation, move_notation, MAX_MOVE_NOTATION_SIZE);
 
 	history->top = board_node;
 	history->size++;
@@ -70,18 +74,38 @@ void delete_history (history_t *history) {
 }
 
 
-const board_t* peek (const history_t *history, int n) {
-	if (n > history->size || n <= 0)
-		return NULL;
-
-	const board_node_t *curr = history->top;
-	while (--n)
-		curr = curr->prev;
-
-	return curr->board;
+const board_t* peek_board (const history_t *history, int n) {
+	const board_node_t *curr = peek(history, n);
+	return (curr != NULL ? curr->board: NULL);
+// 	if (n > history->size || n <= 0)
+// 		return NULL;
+// 
+// 	const board_node_t *curr = history->top;
+// 	while (--n)
+// 		curr = curr->prev;
+// 
+// 	return curr->board;
 }
 
 
 int get_size (const history_t *history) {
 	return history->size;
+}
+
+
+const char *const peek_move (const history_t *history, int n) {
+	const board_node_t *curr = peek(history, n);
+	return (curr != NULL ? curr->move_notation: "\0");
+}
+
+
+static const board_node_t* peek (const history_t *history, int n) {
+	if (n >= history->size || n < 0)
+		return NULL;
+
+	const board_node_t *curr = history->top;
+	while (n--)
+		curr = curr->prev;
+
+	return curr;
 }

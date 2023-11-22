@@ -80,6 +80,8 @@ static	tile_t**	pawn_moves			(board_t *board, const tile_t *tile, const history_
 static	tile_t**	find_all_moves		(board_t *board, const tile_t *tile, const history_t *history);
 static	void		update_check_map	(board_t *board);
 static	bool		is_valid_move		(board_t board, short *dest_tile, short *src_tile);
+static	void		find_move_notation	(const board_t *board, const short *const dest_tile, const short *const src_tile, char *move_notation);
+static	bool		is_reachable		(board_t *board, const tile_t *const dest_tile, const tile_t *const src_tile, const history_t *const history);
 
 
 tile_t** find_moves(board_t *board, const tile_t *tile, const history_t *history) {
@@ -119,6 +121,10 @@ bool move_piece (board_t *board, short *dest_tile, short *src_tile, history_t *h
 	if (board->tiles[r1][c1].piece == NULL || !(board->tiles[r2][c2].can_be_dest))
 		return false;
 
+	// find move notation to store in history
+	char move_notation[MAX_MOVE_NOTATION_SIZE];
+	find_move_notation(board, dest_tile, src_tile, move_notation);
+
 	face_t piece_face = board->tiles[r1][c1].piece->face;
 
 	// en passant
@@ -127,7 +133,7 @@ bool move_piece (board_t *board, short *dest_tile, short *src_tile, history_t *h
 	}
 
 	// castling
-	if (piece_face & KING) {
+	if ((piece_face & KING) && (c1-c2 == 2 || c2-c1 == 2)) {
 		short rook_dest[2] = {r1, INVALID_COL}, rook_src[2] = {r1, INVALID_COL};
 		if (c2 == c1-2) {
 			rook_src[1] = 0;
@@ -137,6 +143,8 @@ bool move_piece (board_t *board, short *dest_tile, short *src_tile, history_t *h
 			rook_dest[1] = 5;
 		}
 		move_piece(board, rook_dest, rook_src, NULL);
+		/* the above function call to move_piece would change the turn also, thus turn it back */
+		board->chance = (board->chance == WHITE ? BLACK: WHITE);
 	}
 
 	board->tiles[r2][c2].piece = board->tiles[r1][c1].piece;
@@ -150,8 +158,17 @@ bool move_piece (board_t *board, short *dest_tile, short *src_tile, history_t *h
 
 	board->chance = (board->chance == WHITE ? BLACK: WHITE);
 
+	// check for check and checkmate
+	int k = 0;
+	while (k < MAX_MOVE_NOTATION_SIZE && move_notation[k] != '\0') k++;
+	color_t color = (board->chance & BLACK ? 1: 0);
+	if (is_game_finished(board, history) && (board->result == BLACK_WON || board->result == WHITE_WON))
+		move_notation[k] = '#';
+	else if (board->kings[color]->has_check[color])
+		move_notation[k] = '+';
+
 	if (history)
-		add_move(history, board);
+		add_move(history, board, move_notation);
 
 	return true;
 }
@@ -176,6 +193,8 @@ void set_dest (board_t *board, tile_t **moves) {
 
 
 bool is_game_finished (board_t *board, const history_t *history) {
+	if (board->result != PENDING) return true;
+
 	color_t color = (board->chance & BLACK ? 1: 0);
 	update_check_map(board);
 	bool is_check = board->kings[color]->has_check[color];
@@ -363,7 +382,7 @@ static tile_t** pawn_moves (board_t *board, const tile_t *tile, const history_t 
 		face_t side_face = (side_tile.piece ? side_tile.piece->face : NO_PIECE);
 		face_t side_origin_face = (side_tile_origin.piece ? side_tile_origin.piece->face : NO_PIECE);
 		if ((side_face & PAWN) && !(side_origin_face & PAWN) && (side_face & BLACK) != color) {
-			const board_t *bef_prev_move_board = peek(history, 2);
+			const board_t *bef_prev_move_board = peek_board(history, 1);
 			tile_t enemy_pawn_origin = bef_prev_move_board->tiles[enemy_origin_row][col+i];
 			face_t enemy_pawn_origin_face = (enemy_pawn_origin.piece ? enemy_pawn_origin.piece->face : NO_PIECE);
 			if ((enemy_pawn_origin_face & PAWN) && (enemy_pawn_origin_face & BLACK) != color)
@@ -521,6 +540,7 @@ static void update_check_map (board_t *board) {
 }
 
 
+/* this function assumes that it is called for destinations reachable from source, it validates the move by looking for possible threats to king and not by checking for reachability. Use is_reachable to check reachability. */
 static bool is_valid_move (board_t board, short *dest_tile, short *src_tile) {
 	color_t color = board.tiles[src_tile[0]][src_tile[1]].piece->face & BLACK ? 1: 0;
 	for (int i=0; i<2; i++)
@@ -537,4 +557,73 @@ static bool is_valid_move (board_t board, short *dest_tile, short *src_tile) {
 	update_check_map(&board);
 
 	return !(board.kings[color]->has_check[color]);
+}
+
+
+static void find_move_notation (const board_t *board, const short *const dest_tile, const short *const src_tile, char* move_notation) {
+	short r1 = src_tile[0], c1 = src_tile[1], r2 = dest_tile[0], c2 = dest_tile[1];
+	int k = 0;
+	face_t piece_face = board->tiles[r1][c1].piece->face;
+
+	if (piece_face & PAWN) {
+		// attacking move
+		if (c1 != c2) {
+			move_notation[k++] = 'a' + c1;
+			move_notation[k++] = 'x';
+		}
+		move_notation[k++] = 'a' + c2;
+		move_notation[k++] = '1' + r2;
+		move_notation[k++] = '\0';
+
+		return;
+	}
+
+	// castling
+	if ((piece_face & KING) && (c1-c2 == 2 || c2-c1 == 2)) {
+		move_notation[k++] = 'O';
+		move_notation[k++] = '-';
+		move_notation[k++] = 'O';
+		if (c1-c2 == 2) { // long castle
+			move_notation[k++] = '-';
+			move_notation[k++] = 'O';
+		}
+		move_notation[k++] = '\0';
+
+		return;
+	}
+
+	move_notation[k++] = get_piece_for_move_notation(board->tiles[r1][c1].piece);
+	bool other_row = false, other_col = false;
+	for (short nr = 0; nr < 8 && (!other_row || !other_col); nr++) {
+		for (short nc = 0; nc < 8 && (!other_row || !other_col); nc++) {
+			if ((nr == r1 && nc == c1) || board->tiles[nr][nc].piece == NULL || board->tiles[nr][nc].piece->face != piece_face) continue;
+			short new_src[2] = {nr, nc};
+			// pass NULL history as piece won't be pawn so pawn_moves won't be called
+			if (is_reachable(board, &(board->tiles[r2][c2]), &(board->tiles[nr][nc]), NULL) && is_valid_move(*board, dest_tile, new_src)) {
+				if (nr != r1) other_row = true;
+				if (nc != c1) other_col = true;
+			}
+		}
+	}
+	if (other_col)
+		move_notation[k++] = 'a' + c1;
+	if (other_row)
+		move_notation[k++] = '1' + r1;
+	if (board->tiles[r2][c2].piece != NULL)
+		move_notation[k++] = 'x';
+	move_notation[k++] = 'a' + c2;
+	move_notation[k++] = '1' + r2;
+	move_notation[k++] = '\0';
+}
+
+
+static bool is_reachable (board_t *board, const tile_t *const dest_tile, const tile_t *const src_tile, const history_t *const history) {
+	tile_t **moves = find_moves(board, src_tile, history);
+	if (moves == NULL)
+		return false;
+	bool result = false;
+	for (int k = 0; k < MAX_MOVES && !result && moves[k] != NULL; k++)
+		if (moves[k] == dest_tile) result = true;
+	free(moves);
+	return result;
 }

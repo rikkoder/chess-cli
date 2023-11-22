@@ -3,10 +3,10 @@
 
 #include "board.h"
 
-const wchar_t PIECES[2][2][6] = {
+static const wchar_t PIECES[2][2][6] = {
 	{
-		{'K', 'Q', 'R', 'N', 'B', 'P'},
-		{'k', 'q', 'r', 'n', 'b', 'p'}
+		{'K', 'Q', 'R', 'B', 'N', 'P'},
+		{'k', 'q', 'r', 'b', 'n', 'p'}
 	},
 	{
 		{L'\u2654', L'\u2655', L'\u2656', L'\u2657', L'\u2658', L'\u2659'},
@@ -63,6 +63,15 @@ wchar_t get_piece_face(const piece_t *piece) {
 }
 
 
+char get_piece_for_move_notation (const piece_t *piece) {
+	if (piece == NULL)
+		return '\0';
+	int type = 0;
+	while (!(piece->face & (1 << type))) type++;
+	return PIECES[ASCII][WHITE][type];
+}
+
+
 void init_board(board_t *board) {
 	memset(board, 0, sizeof(*board));
 	for (short i=0; i<8; i++) {
@@ -77,6 +86,7 @@ void init_board(board_t *board) {
 	board->kings[1] = &(board->tiles[7][4]);
 
 	board->chance = WHITE;
+	board->result = PENDING;
 }
 
 
