@@ -1,5 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+#include <stdio.h>
 
 #include "history.h"
 
@@ -8,12 +10,13 @@ typedef struct board_node_t board_node_t;
 struct history_t {
 	board_node_t *top;
 	int size;
+	char timestamp[TIMESTAMP_SIZE+1];
 };
 
 struct board_node_t {
 	board_node_t *prev;
 	board_t *board;
-	char move_notation[MAX_MOVE_NOTATION_SIZE];
+	char move_notation[MAX_MOVE_NOTATION_SIZE+1];
 };
 
 static	const board_node_t*		peek	(const history_t *history, int n);
@@ -25,6 +28,10 @@ history_t* create_history (void) {
 
 	history->top = NULL;
 	history->size = 0;
+
+	time_t t = time(NULL);
+	struct tm tm = *localtime(&t);
+	snprintf(history->timestamp, TIMESTAMP_SIZE + 1, "%04d%02d%02d%02d%02d%02d\0", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
 
 	return history;
 }
@@ -96,6 +103,11 @@ int get_size (const history_t *history) {
 const char *const peek_move (const history_t *history, int n) {
 	const board_node_t *curr = peek(history, n);
 	return (curr != NULL ? curr->move_notation: "\0");
+}
+
+
+const char *const get_timestamp(const history_t *history) {
+	return history->timestamp;
 }
 
 

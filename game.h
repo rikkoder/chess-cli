@@ -26,7 +26,8 @@
 #endif
 
 
-#ifndef MAIN_MENU_H
+// this gaurd was included so that these macros aren't defined for main_menu.c as not required by main_menu, but if main_menu.h is included in this file in future it would break program as following macros won't be defined. thus commenting main_menu_h gaurd below.
+//#ifndef MAIN_MENU_H
 
 #define PAD_h 0
 #define PAD_w htow(PAD_h)
@@ -46,18 +47,18 @@
 #define tile_size_w htow(tile_size_h)
 #define plr_h tile_size_h
 #define plr_w (game_scr_w - 2 * INNER_PAD_w)
-#define plr1_scr_h plr_h	// for makewin compatibility
-#define plr1_scr_w plr_w	// for makewin compatibility
-#define plr1_scr_y (game_scr_y + INNER_PAD_h)
-#define plr1_scr_x (game_scr_x + INNER_PAD_w)
-#define board_scr_h (9 * tile_size_h + 9 * TILE_PAD_h)
-#define board_scr_w (9 * tile_size_w + 9 * TILE_PAD_w)
-#define board_scr_y (plr1_scr_y + plr_h + INNER_PAD_h)
-#define board_scr_x (game_scr_x + INNER_PAD_w)
 #define plr2_scr_h plr_h	// for makewin compatibility
 #define plr2_scr_w plr_w	// for makewin compatibility
-#define plr2_scr_y (board_scr_y + board_scr_h + INNER_PAD_h)
-#define plr2_scr_x plr1_scr_x
+#define plr2_scr_y (game_scr_y + INNER_PAD_h)
+#define plr2_scr_x (game_scr_x + INNER_PAD_w)
+#define board_scr_h (9 * tile_size_h + 9 * TILE_PAD_h)
+#define board_scr_w (9 * tile_size_w + 9 * TILE_PAD_w)
+#define board_scr_y (plr2_scr_y + plr_h + INNER_PAD_h)
+#define board_scr_x (game_scr_x + INNER_PAD_w)
+#define plr1_scr_h plr_h	// for makewin compatibility
+#define plr1_scr_w plr_w	// for makewin compatibility
+#define plr1_scr_y (board_scr_y + board_scr_h + INNER_PAD_h)
+#define plr1_scr_x plr2_scr_x
 #define hud_scr_h board_scr_h
 #define hud_scr_w (game_scr_w - board_scr_w - 3 * INNER_PAD_w)
 #define hud_scr_y board_scr_y
@@ -68,7 +69,8 @@
 #define game_over_scr_x ((term_w - game_over_scr_w) / 2)	// center of screen
 
 
-#endif
+// gaurd close for main_menu.h
+//#endif
 
 
 enum game_return_code	{QUIT, RESTART, CONTINUE};

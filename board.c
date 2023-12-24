@@ -3,7 +3,7 @@
 
 #include "board.h"
 
-static const wchar_t PIECES[2][2][6] = {
+const wchar_t PIECES[2][2][6] = {
 	{
 		{'K', 'Q', 'R', 'B', 'N', 'P'},
 		{'k', 'q', 'r', 'b', 'n', 'p'}
@@ -13,6 +13,8 @@ static const wchar_t PIECES[2][2][6] = {
 		{L'\u265A', L'\u265B', L'\u265C', L'\u265D', L'\u265E', L'\u265F'}
 	}
 };
+
+bool	SETTINGS_UNICODE_MODE	=	true;
 
 
 piece_t* init_piece(short i, short j) {
@@ -59,7 +61,9 @@ wchar_t get_piece_face(const piece_t *piece) {
 		return L' ';
 	int type = 0;
 	while (!(piece->face & (1 << type))) type++;
-	return PIECES[(bool) (piece->face & UNICODE)][(bool) (piece->face & BLACK)][type];
+	//return PIECES[(bool) (piece->face & UNICODE)][(bool) (piece->face & BLACK)][type];
+	// user SETTINGS_UNICODE_MODE
+	return PIECES[SETTINGS_UNICODE_MODE][(bool) (piece->face & BLACK)][type];
 }
 
 
@@ -68,7 +72,7 @@ char get_piece_for_move_notation (const piece_t *piece) {
 		return '\0';
 	int type = 0;
 	while (!(piece->face & (1 << type))) type++;
-	return PIECES[ASCII][WHITE][type];
+	return PIECES[ASCII][is_black(piece->face)][type];
 }
 
 
@@ -87,11 +91,13 @@ void init_board(board_t *board) {
 
 	board->chance = WHITE;
 	board->result = PENDING;
+
+	memset(board->captured, 0, sizeof(board->captured));
 }
 
 
 void copy_board (board_t *dest_board, const board_t *src_board) {
-	if (dest_board == NULL)
+	if (dest_board == NULL || src_board == NULL)
 		return;
 
 	for (short i = 0; i < 8; i++)

@@ -19,16 +19,24 @@ static	int				term_h;
 static	int				term_w;
 static	bool			onboard;
 
+static	void					draw_board		(const board_t *board, const short sel_tile[2], const short cur_tile[2]);
 static	void					draw_tile		(int y, int x, bool is_cur, bool is_sel, bool is_avail);
 static	enum game_return_code	game_over		(board_t *board, history_t *history);
 static	void					del_game_wins	(void);
 static	void					show_history	(history_t *history);
+static	void					show_captured	(const board_t *board);
+static	void					show_menu		(void);
+static	void					undo_game		(board_t *board, history_t *history);
+
 
 enum game_return_code init_game() {
 	enum game_return_code return_code = QUIT;
+
+	// load this part from saved file to load a game
 	board_t *board = (board_t *) malloc(sizeof(board_t));
-	history_t *history = create_history();
 	init_board(board);
+	history_t *history = create_history();
+
 	tile_t	**moves = NULL;
 	int key = -1;
 	onboard = true;
@@ -36,8 +44,6 @@ enum game_return_code init_game() {
 	short sel_tile[2] = {INVALID_ROW, INVALID_COL};
 
 	getmaxyx(stdscr, term_h, term_w);
-	printf("term_h: %d, term_w: %d", term_h, term_w);
-	printf("window_w: %d", window_w);
 
 	// custom macro in game.h to create new win with parameters associated with window's name
 	initialize_with_box(game_scr);
@@ -51,7 +57,10 @@ enum game_return_code init_game() {
 	wrefresh(game_scr);
 	wrefresh(menu_scr);
 
-	while (key != 'q') {
+	show_history(history);
+	show_captured(board);
+
+	while (true) {
 		if (key == KEY_RESIZE) {
 			getmaxyx(stdscr, term_h, term_w);
 
@@ -65,10 +74,23 @@ enum game_return_code init_game() {
 			wclear(stdscr);
 			
 		} else if (onboard) {
-			if (key == '\n' || key == '\r' || key == KEY_ENTER) {
+			// handle menu keys
+			if (key == 'q') {
+				break;
+			} else if (key == 'u') {
+				undo_game(board, history);
+				sel_tile[0] = INVALID_ROW;
+				sel_tile[1] = INVALID_COL;
+			} else if (key == 's') {
+				save_hstk(history);
+			} else if (key == 'a') {
+				SETTINGS_UNICODE_MODE = !SETTINGS_UNICODE_MODE;
+			}
+
+			// handle board events
+			else if (key == '\n' || key == '\r' || key == KEY_ENTER) {
 				if (sel_tile[0] != INVALID_ROW && sel_tile[1] != INVALID_ROW) {
 					if (move_piece(board, cur_tile, sel_tile, history)) {
-						show_history(history);
 						//if (is_game_finished(board, history)) {
 						if (board->result != PENDING) { // result is calculated in move_piece
 							if ((return_code = game_over(board, history)) != CONTINUE)
@@ -98,39 +120,10 @@ enum game_return_code init_game() {
 			}
 		}
 
-		for (short i=0; i<=8; i++) {
-			for (short j=0; j<=8; j++) {
-				if (i == 8 && j == 0) continue;
-				int tile_row = 7-i, tile_col = j-1;
-
-				wattroff(board_scr, A_BOLD);
-				if ((tile_row + tile_col)%2 != 0)
-					wattron(board_scr, A_STANDOUT);
-				if (i < 8 && j > 0)
-					draw_tile(i, j, (tile_row == cur_tile[0] && tile_col == cur_tile[1]), (tile_row == sel_tile[0] && tile_col == sel_tile[1]), board->tiles[tile_row][tile_col].can_be_dest);
-				wattroff(board_scr, A_STANDOUT);
-
-				if (i == 8) {
-					char c[2] = {0};
-					c[0] = 'A'+(j-1);
-					mvwaddstr(board_scr, i*(tile_size_h + TILE_PAD_h) + tile_size_h/2, j*(tile_size_w + TILE_PAD_w) + tile_size_w/2, c);
-				} else if (j == 0) {
-					char a[20];
-					memset(a, 0, 20);
-					itoa(8-i, a);
-					mvwaddstr(board_scr, i*(tile_size_h + TILE_PAD_h) + tile_size_h/2, j*(tile_size_w + TILE_PAD_w) + tile_size_w/2, a);
-				} else {
-					wattron(board_scr, A_BOLD);
-					if ((tile_row + tile_col)%2 != 0) wattron(board_scr, A_STANDOUT);
-
-					wchar_t piece[2] = {0};
-					piece[0] = get_piece_face(board->tiles[tile_row][tile_col].piece);
-					mvwaddwstr(board_scr, i*(tile_size_h + TILE_PAD_h) + tile_size_h/2, j*(tile_size_w + TILE_PAD_w) + tile_size_w/2, piece);
-
-					wattroff(board_scr, A_STANDOUT);
-				}
-			}
-		}
+		draw_board(board, sel_tile, cur_tile);
+		show_history(history);
+		show_captured(board);
+		show_menu();
 
 		wrefresh(stdscr);
 		wrefresh(game_scr);
@@ -139,6 +132,7 @@ enum game_return_code init_game() {
 		wrefresh(plr2_scr);
 		wrefresh(board_scr);
 		wrefresh(hud_scr);
+
 		key = wgetch(game_scr);
 	}
 
@@ -148,6 +142,44 @@ enum game_return_code init_game() {
 
 	return return_code;
 }
+
+
+static void draw_board (const board_t *board, const short sel_tile[2], const short cur_tile[2]) {
+	for (short i=0; i<=8; i++) {
+		for (short j=0; j<=8; j++) {
+			if (i == 8 && j == 0) continue;
+			int tile_row = 7-i, tile_col = j-1;
+
+			wattroff(board_scr, A_BOLD);
+			if ((tile_row + tile_col)%2 != 0)
+				wattron(board_scr, A_STANDOUT);
+			if (i < 8 && j > 0)
+				draw_tile(i, j, (tile_row == cur_tile[0] && tile_col == cur_tile[1]), (tile_row == sel_tile[0] && tile_col == sel_tile[1]), board->tiles[tile_row][tile_col].can_be_dest);
+			wattroff(board_scr, A_STANDOUT);
+
+			if (i == 8) {
+				char c[2] = {0};
+				c[0] = 'A'+(j-1);
+				mvwaddstr(board_scr, i*(tile_size_h + TILE_PAD_h) + tile_size_h/2, j*(tile_size_w + TILE_PAD_w) + tile_size_w/2, c);
+			} else if (j == 0) {
+				char a[20];
+				memset(a, 0, 20);
+				itoa(8-i, a);
+				mvwaddstr(board_scr, i*(tile_size_h + TILE_PAD_h) + tile_size_h/2, j*(tile_size_w + TILE_PAD_w) + tile_size_w/2, a);
+			} else {
+				wattron(board_scr, A_BOLD);
+				if ((tile_row + tile_col)%2 != 0) wattron(board_scr, A_STANDOUT);
+
+				wchar_t piece[2] = {0};
+				piece[0] = get_piece_face(board->tiles[tile_row][tile_col].piece);
+				mvwaddwstr(board_scr, i*(tile_size_h + TILE_PAD_h) + tile_size_h/2, j*(tile_size_w + TILE_PAD_w) + tile_size_w/2, piece);
+
+				wattroff(board_scr, A_STANDOUT);
+			}
+		}
+	}
+}
+
 
 static void draw_tile(int y, int x, bool is_cur, bool is_sel, bool can_be_dest) {
 	y *= (tile_size_h + TILE_PAD_h);
@@ -218,7 +250,7 @@ static enum game_return_code game_over (board_t *board, history_t * history) {
 		sprintf(result, "%s", "Stale Mate");
 	// error
 	else
-		exit(0);
+		exit(EXIT_FAILURE);
 
 	wattron(game_over_scr, A_UNDERLINE);
 	mvwaddnstr(game_over_scr, 1, game_over_scr_w/2 - strlen(result)/2, result, RESULT_SIZE);
@@ -236,28 +268,22 @@ static enum game_return_code game_over (board_t *board, history_t * history) {
 			selected_opt = (selected_opt-1 + NO_OF_OPTS) % NO_OF_OPTS;
 			if (selected_opt == SAVE_OPT && is_saved)
 				selected_opt = (selected_opt-1 + NO_OF_OPTS) % NO_OF_OPTS;
-		}
-		else if (key == KEY_DOWN || key == 'j') {
+		} else if (key == KEY_DOWN || key == 'j') {
 			selected_opt = (selected_opt+1) % NO_OF_OPTS;
 			if (selected_opt == SAVE_OPT && is_saved)
 				selected_opt = (selected_opt+1) % NO_OF_OPTS;
-		}
-		else if (key == '\n' || key == '\r' || key == KEY_ENTER) {
+		} else if (key == '\n' || key == '\r' || key == KEY_ENTER) {
 			if (selected_opt == UNDO_OPT) {
-				undo(history);
-				copy_board(board, peek_board(history, 0));
+				undo_game(board, history);
 				return CONTINUE;
-			}
-			else if (selected_opt == SAVE_OPT) {
+			} else if (selected_opt == SAVE_OPT) {
 				// save();
 				is_saved = true;
 				snprintf(options[SAVE_OPT], OPTS_SIZE, "%-11s", "Saved");
-			}
-			else if (selected_opt == RESTART_OPT) {
+			} else if (selected_opt == RESTART_OPT) {
 				delwin(game_over_scr);
 				return RESTART;
-			}
-			else if (selected_opt == MAIN_MENU_OPT) {
+			} else if (selected_opt == MAIN_MENU_OPT) {
 				delwin(game_over_scr);
 				return QUIT;
 			}
@@ -305,4 +331,67 @@ static void show_history (history_t *history) {
 		move_no += 0.5;
 	}
 	wrefresh(hud_scr);
+}
+
+
+static void show_captured (const board_t *board) {
+	wclear(plr1_scr);
+	box(plr1_scr, 0, 0);
+
+// 	bool is_unicode = is_unicode(board->kings[0]->piece->face);
+	// use SETTINGS_UNICODE_MODE
+	bool is_unicode = SETTINGS_UNICODE_MODE;
+	const int V_OFFSET = 1, H_OFFSET = 1, WSTR_SIZE = 7;
+	wchar_t wstr[WSTR_SIZE];
+	for (int i=0; i<PIECE_TYPES; i++) {
+		if ((1 << i) & KING) continue;	// king is never captured
+		swprintf(wstr, WSTR_SIZE, L"%lcx%hd", PIECES[is_unicode][1][i], board->captured[1][i]);
+		mvwaddnwstr(plr1_scr, V_OFFSET, (i*WSTR_SIZE) + H_OFFSET, wstr, WSTR_SIZE);
+		swprintf(wstr, WSTR_SIZE, L"%lcx%hd", PIECES[is_unicode][0][i], board->captured[0][i]);
+		mvwaddnwstr(plr2_scr, V_OFFSET, (i*WSTR_SIZE) + H_OFFSET, wstr, WSTR_SIZE);
+	}
+
+	wrefresh(plr1_scr);
+	wrefresh(plr2_scr);
+}
+
+
+static void show_menu (void) {
+	const int NO_OF_OPTS = 4;
+	const int OPTS_SIZE = 12;
+	const int V_OFFSET = 1, H_OFFSET = 1;
+
+	// initialize options
+	char options[NO_OF_OPTS][OPTS_SIZE+1];
+	char prefixes[] = {'a', 'u', 's', 'q'};
+	if (SETTINGS_UNICODE_MODE)
+		snprintf(options[0], OPTS_SIZE, ": %s", "ascii");
+	else
+		snprintf(options[0], OPTS_SIZE, ": %s", "unicode");
+	snprintf(options[1], OPTS_SIZE, ": %s", "undo");
+	snprintf(options[2], OPTS_SIZE, ": %s", "save");
+	snprintf(options[3], OPTS_SIZE, ": %s", "quit");
+
+	for (int i=0; i<NO_OF_OPTS; i++) {
+		wattron(menu_scr, A_BOLD);
+		wattron(menu_scr, A_STANDOUT);
+		int prefix_pos = (i*(OPTS_SIZE+1)) + H_OFFSET;
+		mvwaddch(menu_scr, V_OFFSET, prefix_pos, prefixes[i]);
+		wattroff(menu_scr, A_BOLD);
+		wattroff(menu_scr, A_STANDOUT);
+		mvwaddnstr(menu_scr, V_OFFSET, prefix_pos + 1, options[i], OPTS_SIZE);
+	}
+
+	wrefresh(menu_scr);
+}
+
+
+static void undo_game (board_t *board, history_t *history) {
+	undo(history);
+	const board_t *prev_board = peek_board(history, 0);
+	if (prev_board == NULL)
+		init_board(board);
+	else
+		copy_board(board, peek_board(history, 0));
+	clear_dest(board);
 }

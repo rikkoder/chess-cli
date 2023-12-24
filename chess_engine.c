@@ -126,10 +126,12 @@ bool move_piece (board_t *board, short *dest_tile, short *src_tile, history_t *h
 	find_move_notation(board, dest_tile, src_tile, move_notation);
 
 	face_t piece_face = board->tiles[r1][c1].piece->face;
+	color_t enemy_color = !is_black(piece_face);
 
 	// en passant
 	if ((piece_face & PAWN) && (c1 != c2) && (board->tiles[r2][c2].piece == NULL)) {
 		board->tiles[r1][c2].piece = NULL;
+		board->captured[enemy_color][piece_index(PAWN)]++;
 	}
 
 	// castling
@@ -146,6 +148,10 @@ bool move_piece (board_t *board, short *dest_tile, short *src_tile, history_t *h
 		/* the above function call to move_piece would change the turn also, thus turn it back */
 		board->chance = (board->chance == WHITE ? BLACK: WHITE);
 	}
+
+	face_t enemy_piece_face = board->tiles[r2][c2].piece ? board->tiles[r2][c2].piece->face : 0;
+	if (enemy_piece_face != 0)
+		board->captured[enemy_color][piece_index(enemy_piece_face)]++;
 
 	board->tiles[r2][c2].piece = board->tiles[r1][c1].piece;
 	board->tiles[r1][c1].piece = NULL;

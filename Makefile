@@ -15,6 +15,7 @@ install: $(PROGRAM)
 
 $(PROGRAM): $(SRC)
 	$(CC) $(CFLAGS) -o $(PROGRAM) $(SRC) $(LDFLAGS)
+	mkdir -p $(HOME)/.chess-cli-files
 	cp $(PROGRAM) $(HOME)/.local/bin
 
 debug:
