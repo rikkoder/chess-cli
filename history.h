@@ -19,6 +19,7 @@ const board_t*		peek_board		(const history_t *history, int n);
 int					get_size		(const history_t *history);
 const char *const	peek_move		(const history_t *history, int n);
 const char *const	get_timestamp	(const history_t *history);
+history_t*			reverse_history	(const history_t *history);
 
 
 #endif

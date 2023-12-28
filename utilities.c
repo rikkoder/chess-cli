@@ -41,14 +41,24 @@ char* itoa(int i, char *a) {
 
 
 void save_hstk (const history_t *history) {
+/*
+ *	FORMAT OF SAVE FILE
+ *
+ *	MOVE_NOTATION	LVL2_DELIMITER	CAPTURED_PIECES(FIXED SIZE)	BOARD_STATE	LVL1DELIMITER
+ *
+ *	MOVE_NOTATION	-	FORMAT DEFINED BY chess_engine.c:find_move_notation		(DYNAMIC SIZE)
+ *	LVL2_DELIMITER	-	A SINGLE CHARACTER TO MARK END OF MOVE_NOTATION			(1 CHAR)
+ *	CAPTURED_PIECES	-	Q00R00B00N00P00q00r00b00n00p00							(30 CHARS)
+ *	BOARD_STATE		-	FILLED FROM (0, 0) CELL TO (7, 7) CELL
+ *					-	ASCII_PIECE_FACE PIECE_MOVED/NOT_MOVED					(2 CHARS FOR EACH FILLED CELL)
+ *					-	INTEGER REPRESENTING COUNT OF CONTINUOUS EMPTY CELLS	(DYNAMIC SIZE)
+ *	LVL1_DELIMITER	-	A SINGLE CHARACTER TO MARK END OF BOARD_STATE			(1 CHAR)
+ */
+
 	int filename_size = save_directory_size + TIMESTAMP_SIZE + strlen(FILE_EXT) + 1;
 	char *filename = (char *) malloc(sizeof(char) * filename_size);
 	snprintf(filename, filename_size, "%s%s.%s", save_directory, get_timestamp(history), FILE_EXT);
 	FILE *fp = fopen(filename, "w");
-
-	history_t *temp_hstk = create_history();
-	for (int i=0; i<get_size(history); i++)
-		add_move(temp_hstk, peek_board(history, i), peek_move(history, i));
 
 	const int BUFFER_SIZE = 1024;
 	char buffer[BUFFER_SIZE+1];
@@ -57,7 +67,9 @@ void save_hstk (const history_t *history) {
 	const int CAPTURED_DATA_SIZE = 30;	// fixed lenght, 10 capturable pieces, 3 characters for each
 	const int MAX_BOARD_DATA_SIZE = 128;	// if each of 64 cell is filled, 2 characters for each piece
 	const int MAX_DATA_SIZE = MAX_MOVE_NOTATION_SIZE + 1 + CAPTURED_DATA_SIZE + MAX_BOARD_DATA_SIZE + 1;	// delimiters after variable sized move notation and board description.
-	for (int i=0; i<get_size(temp_hstk); i++) {
+	history_t *reversed_history = reverse_history(history);
+	int total_moves = get_size(reversed_history);
+	for (int i=0; i<total_moves; i++) {
 		// prevent buffer overflow
 		if (ptr + MAX_DATA_SIZE > BUFFER_SIZE) {
 			// write into file till ptr
@@ -66,21 +78,21 @@ void save_hstk (const history_t *history) {
 		}
 
 		// store move notation
-		const char *move = peek_move(temp_hstk, i);
+		const char *move = peek_move(reversed_history, 0);
 		for (int j = 0; j < MAX_MOVE_NOTATION_SIZE && move[j] != '\0'; j++)
 			buffer[ptr++] = move[j];
 		buffer[ptr++] = LVL2_DELIMITER;
 		
-		const board_t *board = peek_board(temp_hstk, i);
+		const board_t *board = peek_board(reversed_history, 0);
 		// store #captured pieces data
 		for (int j = 0; j < 2 ; j++) {
 			for (int k = 0; k < PIECE_TYPES; k++) {
 				if ((1 << k) & KING) continue;
 				buffer[ptr++] = PIECES[ASCII][j][k];
 				int c = board->captured[j][k];
-				buffer[ptr+1] = c%10;
+				buffer[ptr+1] = '0' + c%10;
 				c /= 10;
-				buffer[ptr] = c%10;
+				buffer[ptr] = '0' + c%10;
 				ptr += 2;
 			}
 		}
@@ -118,10 +130,10 @@ void save_hstk (const history_t *history) {
 		buffer[ptr++] = LVL1_DELIMITER;
 
 		// remove top board
-		undo(temp_hstk);
+		undo(reversed_history);
 	}
 
-	delete_history(temp_hstk);
+	delete_history(reversed_history);
 
 	// write into file till ptr
 	write_to_file(fp, buffer, ptr);

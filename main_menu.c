@@ -201,7 +201,7 @@ static timestamp_t* collect_save_files (int *saves_count) {
 					exit(EXIT_FAILURE);
 				}
 				saves_capacity <<= 1;
-				saves = realloc(saves, saves_capacity);
+				saves = realloc(saves, saves_capacity * sizeof(timestamp_t));
 				if (saves == NULL) {
 					fprintf(stderr, "can't load.. too much save files!");
 					exit(EXIT_FAILURE);

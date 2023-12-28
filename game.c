@@ -277,7 +277,7 @@ static enum game_return_code game_over (board_t *board, history_t * history) {
 				undo_game(board, history);
 				return CONTINUE;
 			} else if (selected_opt == SAVE_OPT) {
-				// save();
+				save_hstk(history);
 				is_saved = true;
 				snprintf(options[SAVE_OPT], OPTS_SIZE, "%-11s", "Saved");
 			} else if (selected_opt == RESTART_OPT) {

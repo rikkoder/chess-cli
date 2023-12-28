@@ -31,7 +31,7 @@ history_t* create_history (void) {
 
 	time_t t = time(NULL);
 	struct tm tm = *localtime(&t);
-	snprintf(history->timestamp, TIMESTAMP_SIZE + 1, "%04d%02d%02d%02d%02d%02d\0", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+	snprintf(history->timestamp, TIMESTAMP_SIZE + 1, "%04d%02d%02d%02d%02d%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
 
 	return history;
 }
@@ -43,6 +43,7 @@ void add_move (history_t *history, const board_t *board, const char *const move_
 
 	board_node->prev = history->top;
 	board_node->board = (board_t*) malloc(sizeof(board_t));
+	memset(board_node->board, 0, sizeof(board_t));
 	copy_board(board_node->board, board);
 	strncpy(board_node->move_notation, move_notation, MAX_MOVE_NOTATION_SIZE);
 
@@ -84,14 +85,6 @@ void delete_history (history_t *history) {
 const board_t* peek_board (const history_t *history, int n) {
 	const board_node_t *curr = peek(history, n);
 	return (curr != NULL ? curr->board: NULL);
-// 	if (n > history->size || n <= 0)
-// 		return NULL;
-// 
-// 	const board_node_t *curr = history->top;
-// 	while (--n)
-// 		curr = curr->prev;
-// 
-// 	return curr->board;
 }
 
 
@@ -120,4 +113,18 @@ static const board_node_t* peek (const history_t *history, int n) {
 		curr = curr->prev;
 
 	return curr;
+}
+
+
+history_t* reverse_history (const history_t *history) {
+	history_t *reversed_history = create_history();
+	if (reversed_history == NULL)
+		return NULL;
+	strncpy(reversed_history->timestamp, history->timestamp, TIMESTAMP_SIZE);
+	board_node_t *cur = history->top;
+	while (cur != NULL) {
+		add_move(reversed_history, cur->board, cur->move_notation);
+		cur = cur->prev;
+	}
+	return reversed_history;
 }
