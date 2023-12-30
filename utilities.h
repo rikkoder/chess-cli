@@ -17,7 +17,7 @@ char*		itoa		(int i, char *a);
 
 // load and save functions
 void		save_hstk	(const history_t *history);
-history_t*	load_hstk	(const char *filename);
+history_t*	load_hstk	(const timestamp_t timestamp);
 void		export_pgn	(const history_t *history);
 
 

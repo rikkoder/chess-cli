@@ -29,13 +29,19 @@ static	void					show_menu		(void);
 static	void					undo_game		(board_t *board, history_t *history);
 
 
-enum game_return_code init_game() {
+enum game_return_code init_game(const timestamp_t load_timestamp) {
 	enum game_return_code return_code = QUIT;
 
 	// load this part from saved file to load a game
-	board_t *board = (board_t *) malloc(sizeof(board_t));
-	init_board(board);
-	history_t *history = create_history();
+	board_t *board = (board_t *) calloc(1, sizeof(board_t));
+	history_t *history = NULL;
+	if (load_timestamp == NULL) {
+		init_board(board);
+		history = create_history();
+	} else {
+		history = load_hstk(load_timestamp);
+		copy_board(board, peek_board(history, 0));
+	}
 
 	tile_t	**moves = NULL;
 	int key = -1;
@@ -91,7 +97,6 @@ enum game_return_code init_game() {
 			else if (key == '\n' || key == '\r' || key == KEY_ENTER) {
 				if (sel_tile[0] != INVALID_ROW && sel_tile[1] != INVALID_ROW) {
 					if (move_piece(board, cur_tile, sel_tile, history)) {
-						//if (is_game_finished(board, history)) {
 						if (board->result != PENDING) { // result is calculated in move_piece
 							if ((return_code = game_over(board, history)) != CONTINUE)
 								break;
@@ -284,6 +289,8 @@ static enum game_return_code game_over (board_t *board, history_t * history) {
 				delwin(game_over_scr);
 				return RESTART;
 			} else if (selected_opt == MAIN_MENU_OPT) {
+				wclear(game_over_scr);
+				wrefresh(game_over_scr);
 				delwin(game_over_scr);
 				return QUIT;
 			}
@@ -309,11 +316,23 @@ static enum game_return_code game_over (board_t *board, history_t * history) {
 
 
 static void del_game_wins (void) {
+	wclear(game_scr);
+	wrefresh(game_scr);
 	delwin(game_scr);
+	wclear(menu_scr);
+	wrefresh(menu_scr);
 	delwin(menu_scr);
+	wclear(plr1_scr);
+	wrefresh(plr1_scr);
 	delwin(plr1_scr);
+	wclear(plr2_scr);
+	wrefresh(plr2_scr);
 	delwin(plr2_scr);
+	wclear(board_scr);
+	wrefresh(board_scr);
 	delwin(board_scr);
+	wclear(hud_scr);
+	wrefresh(hud_scr);
 	delwin(hud_scr);
 }
 

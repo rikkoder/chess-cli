@@ -71,7 +71,7 @@ void init_main_menu() {
 
 				enum game_return_code return_code;
 				do {
-					 return_code = init_game();
+					 return_code = init_game(NULL);
 				} while (return_code == RESTART);
 
 				// redrawing after end of game
@@ -82,7 +82,12 @@ void init_main_menu() {
 			} else if (selected_opt == LOAD_OPT) {
 				timestamp_t load_timestamp;
 				memset(load_timestamp, 0, sizeof(load_timestamp));
-				enum load_return_code return_code = load_menu(load_timestamp);
+				if (load_menu(load_timestamp) == LOAD_FILE_SELECTED) {
+					enum game_return_code return_code = init_game(load_timestamp);
+					while (return_code == RESTART) {
+						return_code = init_game(NULL);
+					}
+				};
 			} else {
 				delwin(main_menu_scr);
 				return ;

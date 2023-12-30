@@ -10,7 +10,7 @@ typedef struct board_node_t board_node_t;
 struct history_t {
 	board_node_t *top;
 	int size;
-	char timestamp[TIMESTAMP_SIZE+1];
+	timestamp_t timestamp;
 };
 
 struct board_node_t {
@@ -104,15 +104,8 @@ const char *const get_timestamp(const history_t *history) {
 }
 
 
-static const board_node_t* peek (const history_t *history, int n) {
-	if (n >= history->size || n < 0)
-		return NULL;
-
-	const board_node_t *curr = history->top;
-	while (n--)
-		curr = curr->prev;
-
-	return curr;
+void set_timestamp (history_t *history, const timestamp_t timestamp) {
+	strncpy(history->timestamp, timestamp, TIMESTAMP_SIZE);
 }
 
 
@@ -127,4 +120,16 @@ history_t* reverse_history (const history_t *history) {
 		cur = cur->prev;
 	}
 	return reversed_history;
+}
+
+
+static const board_node_t* peek (const history_t *history, int n) {
+	if (n >= history->size || n < 0)
+		return NULL;
+
+	const board_node_t *curr = history->top;
+	while (n--)
+		curr = curr->prev;
+
+	return curr;
 }

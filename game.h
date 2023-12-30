@@ -1,8 +1,9 @@
 #ifndef GAME_H
 #define GAME_H
 
-#include "main.h"
 #include <ncurses.h>
+#include "main.h"
+#include "history.h"
 
 // without boxes
 #define initialize_without_box(x)	{x = newwin(x##_h, x##_w, x##_y, x##_x); keypad(x, true);}
@@ -75,7 +76,7 @@
 
 enum game_return_code	{QUIT, RESTART, CONTINUE};
 
-enum game_return_code	init_game	();
+enum game_return_code	init_game	(const timestamp_t load_timestamp);
 
 
 #endif
