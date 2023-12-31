@@ -1,17 +1,8 @@
 #ifndef GAME_H
 #define GAME_H
 
-#include <ncurses.h>
 #include "main.h"
 #include "history.h"
-
-// without boxes
-#define initialize_without_box(x)	{x = newwin(x##_h, x##_w, x##_y, x##_x); keypad(x, true);}
-#define translate_without_box(x)	{wresize(x, x##_h, x##_w); mvwin(x, x##_y, x##_x); wclear(x);}
-
-// with boxes
-#define initialize_with_box(x)	{x = newwin(x##_h, x##_w, x##_y, x##_x); keypad(x, true); box(x, 0, 0);}
-#define translate_with_box(x)	{wresize(x, x##_h, x##_w); mvwin(x, x##_y, x##_x); wclear(x); box(x, 0, 0);}
 
 // to make stdscr compatible with init and trans macros
 #define stdscr_h term_h
@@ -74,7 +65,7 @@
 //#endif
 
 
-enum game_return_code	{QUIT, RESTART, CONTINUE};
+enum game_return_code	{QUIT, RESTART, CONTINUE, INVALID_LOAD};
 
 enum game_return_code	init_game	(const timestamp_t load_timestamp);
 

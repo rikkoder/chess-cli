@@ -37,9 +37,15 @@ enum game_return_code init_game(const timestamp_t load_timestamp) {
 	history_t *history = NULL;
 	if (load_timestamp == NULL) {
 		init_board(board);
-		history = create_history();
+
+		// for the moment let players be HUMAN (2p local)
+		player_t plr1 = { "Player1", HUMAN };
+		player_t plr2 = { "Player2", HUMAN };
+		history = create_history(plr1, plr2);
 	} else {
 		history = load_hstk(load_timestamp);
+		if (history == NULL)
+			return INVALID_LOAD;
 		copy_board(board, peek_board(history, 0));
 	}
 
@@ -70,7 +76,7 @@ enum game_return_code init_game(const timestamp_t load_timestamp) {
 		if (key == KEY_RESIZE) {
 			getmaxyx(stdscr, term_h, term_w);
 
-			// custom macro in game_scr.h to resize, move and clear window
+			// custom macro in main.h to resize, move and clear window
 			translate_with_box(game_scr);
 			translate_with_box(menu_scr);
 			translate_with_box(plr1_scr);
@@ -89,6 +95,8 @@ enum game_return_code init_game(const timestamp_t load_timestamp) {
 				sel_tile[1] = INVALID_COL;
 			} else if (key == 's') {
 				save_hstk(history);
+			} else if (key == 'e') {
+				export_pgn(history);
 			} else if (key == 'a') {
 				SETTINGS_UNICODE_MODE = !SETTINGS_UNICODE_MODE;
 			}
@@ -98,6 +106,7 @@ enum game_return_code init_game(const timestamp_t load_timestamp) {
 				if (sel_tile[0] != INVALID_ROW && sel_tile[1] != INVALID_ROW) {
 					if (move_piece(board, cur_tile, sel_tile, history)) {
 						if (board->result != PENDING) { // result is calculated in move_piece
+							show_history(history);
 							if ((return_code = game_over(board, history)) != CONTINUE)
 								break;
 						}
@@ -230,18 +239,20 @@ static enum game_return_code game_over (board_t *board, history_t * history) {
 	initialize_with_box(game_over_scr);
 
 	bool is_saved = false;
+	bool is_pgn_exported = false;
 
-	const int NO_OF_OPTS = 4;
-	const int OPTS_SIZE = 12;
+	const int NO_OF_OPTS = 5;
+	const int OPTS_SIZE = 14;
 
-	enum {UNDO_OPT, SAVE_OPT, RESTART_OPT, MAIN_MENU_OPT};
+	enum {UNDO_OPT, SAVE_OPT, EXPORT_PGN_OPT, RESTART_OPT, MAIN_MENU_OPT};
 
 	// initialize options
 	char options[NO_OF_OPTS][OPTS_SIZE+1];
-	snprintf(options[UNDO_OPT], OPTS_SIZE, "%-11s", "Undo");
-	snprintf(options[SAVE_OPT], OPTS_SIZE, "%-11s", "Save");
-	snprintf(options[RESTART_OPT], OPTS_SIZE, "%-11s", "Restart");
-	snprintf(options[MAIN_MENU_OPT], OPTS_SIZE, "%-11s", "Main Menu");
+	snprintf(options[UNDO_OPT], OPTS_SIZE, "%-*s", OPTS_SIZE-1, "Undo");
+	snprintf(options[SAVE_OPT], OPTS_SIZE, "%-*s", OPTS_SIZE-1, "Save");
+	snprintf(options[EXPORT_PGN_OPT], OPTS_SIZE, "%-*s", OPTS_SIZE-1, "Export PGN");
+	snprintf(options[RESTART_OPT], OPTS_SIZE, "%-*s", OPTS_SIZE-1, "Restart");
+	snprintf(options[MAIN_MENU_OPT], OPTS_SIZE, "%-*s", OPTS_SIZE-1, "Main Menu");
 	int selected_opt = 0;
 
 	const int RESULT_SIZE = 20;
@@ -271,20 +282,26 @@ static enum game_return_code game_over (board_t *board, history_t * history) {
 
 		if (key == KEY_UP || key == 'k') {
 			selected_opt = (selected_opt-1 + NO_OF_OPTS) % NO_OF_OPTS;
-			if (selected_opt == SAVE_OPT && is_saved)
+			while ((selected_opt == SAVE_OPT && is_saved) || (selected_opt == EXPORT_PGN_OPT && is_pgn_exported))
 				selected_opt = (selected_opt-1 + NO_OF_OPTS) % NO_OF_OPTS;
 		} else if (key == KEY_DOWN || key == 'j') {
 			selected_opt = (selected_opt+1) % NO_OF_OPTS;
-			if (selected_opt == SAVE_OPT && is_saved)
+			while ((selected_opt == SAVE_OPT && is_saved) || (selected_opt == EXPORT_PGN_OPT && is_pgn_exported))
 				selected_opt = (selected_opt+1) % NO_OF_OPTS;
 		} else if (key == '\n' || key == '\r' || key == KEY_ENTER) {
 			if (selected_opt == UNDO_OPT) {
 				undo_game(board, history);
 				return CONTINUE;
 			} else if (selected_opt == SAVE_OPT) {
-				save_hstk(history);
-				is_saved = true;
-				snprintf(options[SAVE_OPT], OPTS_SIZE, "%-11s", "Saved");
+				is_saved = save_hstk(history);
+				if (is_saved) {
+					snprintf(options[SAVE_OPT], OPTS_SIZE, "%-*s", OPTS_SIZE-1, "Saved");
+				}
+			} else if (selected_opt == EXPORT_PGN_OPT) {
+				is_pgn_exported = export_pgn(history);
+				if (is_pgn_exported) {
+					snprintf(options[EXPORT_PGN_OPT], OPTS_SIZE, "%-*s", OPTS_SIZE-1, "PGN Exported");
+				}
 			} else if (selected_opt == RESTART_OPT) {
 				delwin(game_over_scr);
 				return RESTART;
@@ -376,19 +393,20 @@ static void show_captured (const board_t *board) {
 
 
 static void show_menu (void) {
-	const int NO_OF_OPTS = 4;
+	const int NO_OF_OPTS = 5;
 	const int OPTS_SIZE = 12;
 	const int V_OFFSET = 1, H_OFFSET = 1;
 
 	// initialize options
 	char options[NO_OF_OPTS][OPTS_SIZE+1];
-	char prefixes[] = {'a', 'u', 's', 'q'};
+	char prefixes[] = {'a', 'u', 's', 'e', 'q'};
 	if (SETTINGS_UNICODE_MODE)
 		snprintf(options[0], OPTS_SIZE, ": %s", "ascii");
 	else
 		snprintf(options[0], OPTS_SIZE, ": %s", "unicode");
 	snprintf(options[1], OPTS_SIZE, ": %s", "undo");
 	snprintf(options[2], OPTS_SIZE, ": %s", "save");
+	snprintf(options[3], OPTS_SIZE, ": %s", "export pgn");
 	snprintf(options[3], OPTS_SIZE, ": %s", "quit");
 
 	for (int i=0; i<NO_OF_OPTS; i++) {

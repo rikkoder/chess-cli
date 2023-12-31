@@ -17,43 +17,7 @@ const wchar_t PIECES[2][2][6] = {
 bool	SETTINGS_UNICODE_MODE	=	true;
 
 
-piece_t* init_piece(short i, short j) {
-	// no piece
-	if (i > 1 && i < 6)
-		return NULL;
-
-	piece_t *piece = (piece_t*) malloc(sizeof(piece_t));
-	memset(piece, 0, sizeof(piece_t));
-
-	piece->face |= UNICODE;
-	if (i >= 6) piece->face |= BLACK;
-	if (i == 1 || i == 6) {
-		piece->face |= PAWN;
-		return piece;
-	}
-
-	switch (j) {
-		case 0:
-		case 7:
-			piece->face |= ROOK;
-			break;
-		case 1:
-		case 6:
-			piece->face |= KNIGHT;
-			break;
-		case 2:
-		case 5:
-			piece->face |= BISHOP;
-			break;
-		case 3:
-			piece->face |= QUEEN;
-			break;
-		case 4:
-			piece->face |= KING;
-	}
-
-	return piece;
-}
+static	piece_t*	init_piece	(short i, short j);
 
 
 wchar_t get_piece_face(const piece_t *piece) {
@@ -134,4 +98,43 @@ void delete_board (board_t *board) {
 				free(board->tiles[i][j].piece);
 	
 	free(board);
+}
+
+
+static piece_t* init_piece(short i, short j) {
+	// no piece
+	if (i > 1 && i < 6)
+		return NULL;
+
+	piece_t *piece = (piece_t*) malloc(sizeof(piece_t));
+	memset(piece, 0, sizeof(piece_t));
+
+	piece->face |= UNICODE;
+	if (i >= 6) piece->face |= BLACK;
+	if (i == 1 || i == 6) {
+		piece->face |= PAWN;
+		return piece;
+	}
+
+	switch (j) {
+		case 0:
+		case 7:
+			piece->face |= ROOK;
+			break;
+		case 1:
+		case 6:
+			piece->face |= KNIGHT;
+			break;
+		case 2:
+		case 5:
+			piece->face |= BISHOP;
+			break;
+		case 3:
+			piece->face |= QUEEN;
+			break;
+		case 4:
+			piece->face |= KING;
+	}
+
+	return piece;
 }

@@ -11,6 +11,8 @@ struct history_t {
 	board_node_t *top;
 	int size;
 	timestamp_t timestamp;
+	player_t players[2];
+	enum result result;
 };
 
 struct board_node_t {
@@ -22,7 +24,7 @@ struct board_node_t {
 static	const board_node_t*		peek	(const history_t *history, int n);
 
 
-history_t* create_history (void) {
+history_t* create_history (const player_t plr1, const player_t plr2) {
 	history_t *history = (history_t*) malloc(sizeof(history_t));
 	memset(history, 0, sizeof(history_t));
 
@@ -32,6 +34,10 @@ history_t* create_history (void) {
 	time_t t = time(NULL);
 	struct tm tm = *localtime(&t);
 	snprintf(history->timestamp, TIMESTAMP_SIZE + 1, "%04d%02d%02d%02d%02d%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+
+	history->players[0] = plr1;
+	history->players[1] = plr2;
+	history->result = PENDING;
 
 	return history;
 }
@@ -110,7 +116,9 @@ void set_timestamp (history_t *history, const timestamp_t timestamp) {
 
 
 history_t* reverse_history (const history_t *history) {
-	history_t *reversed_history = create_history();
+	player_t plr1, plr2;
+	get_players(history, &plr1, &plr2);
+	history_t *reversed_history = create_history(plr1, plr2);
 	if (reversed_history == NULL)
 		return NULL;
 	strncpy(reversed_history->timestamp, history->timestamp, TIMESTAMP_SIZE);
@@ -120,6 +128,27 @@ history_t* reverse_history (const history_t *history) {
 		cur = cur->prev;
 	}
 	return reversed_history;
+}
+
+
+void update_result (history_t *history) {
+	if (history == NULL || get_size(history) == 0)
+		return;
+	is_game_finished(history->top->board, history);
+	history->result = history->top->board->result;
+}
+
+
+enum result get_result (const history_t *history) {
+	return history->result;
+}
+
+
+void get_players (const history_t *history, player_t *plr1, player_t *plr2) {
+	if (history == NULL)
+		return;
+	*plr1 = history->players[0];
+	*plr2 = history->players[1];
 }
 
 
