@@ -2,7 +2,7 @@
 
 If you want to play chess without leaving your terminal, you have come to the right place. *chess-cli* is a chess written completely in C using ncurses library for TUI. The program is tested and developed on arch linux but should be compatible with most linux systems and WSL (for windows).
 
-![(screenshot of the game)](https://drive.google.com/uc?export=view&id=1tCAkpotVdRHeKb4dsLASuYHnXUdT-bRJ)
+![(screenshot of the game)](https://drive.google.com/uc?export=view&id=1pw5RNw0P2PyW4wOKw39KNQ3ZzHWv5ARx)
 
 ## Installation
 
