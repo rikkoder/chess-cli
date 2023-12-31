@@ -394,8 +394,8 @@ static void show_captured (const board_t *board) {
 
 static void show_menu (void) {
 	const int NO_OF_OPTS = 5;
-	const int OPTS_SIZE = 12;
-	const int V_OFFSET = 1, H_OFFSET = 1;
+	const int OPTS_SIZE = 14;
+	const int V_OFFSET = 1, H_OFFSET = 3;
 
 	// initialize options
 	char options[NO_OF_OPTS][OPTS_SIZE+1];
@@ -407,16 +407,21 @@ static void show_menu (void) {
 	snprintf(options[1], OPTS_SIZE, ": %s", "undo");
 	snprintf(options[2], OPTS_SIZE, ": %s", "save");
 	snprintf(options[3], OPTS_SIZE, ": %s", "export pgn");
-	snprintf(options[3], OPTS_SIZE, ": %s", "quit");
+	snprintf(options[4], OPTS_SIZE, ": %s", "quit");
 
-	for (int i=0; i<NO_OF_OPTS; i++) {
+	int prefix_pos[NO_OF_OPTS];
+	prefix_pos[0] = 0;
+	for (int i = 1; i < NO_OF_OPTS; i++) {
+		prefix_pos[i] = prefix_pos[i-1] + strlen(options[i-1]) + H_OFFSET;
+	}
+
+	for (int i = 0; i < NO_OF_OPTS; i++) {
 		wattron(menu_scr, A_BOLD);
 		wattron(menu_scr, A_STANDOUT);
-		int prefix_pos = (i*(OPTS_SIZE+1)) + H_OFFSET;
-		mvwaddch(menu_scr, V_OFFSET, prefix_pos, prefixes[i]);
+		mvwaddch(menu_scr, V_OFFSET, prefix_pos[i] + H_OFFSET, prefixes[i]);
 		wattroff(menu_scr, A_BOLD);
 		wattroff(menu_scr, A_STANDOUT);
-		mvwaddnstr(menu_scr, V_OFFSET, prefix_pos + 1, options[i], OPTS_SIZE);
+		mvwaddnstr(menu_scr, V_OFFSET, prefix_pos[i] + H_OFFSET + 1, options[i], OPTS_SIZE);
 	}
 
 	wrefresh(menu_scr);
