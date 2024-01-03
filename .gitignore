@@ -1,7 +1,8 @@
 .gitignore
 Session.vim
-chess-cli
 gdb.txt
 todo.txt
 *.hstk
 todo.md
+build
+debug

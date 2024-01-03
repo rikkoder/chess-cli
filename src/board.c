@@ -25,8 +25,7 @@ wchar_t get_piece_face(const piece_t *piece) {
 		return L' ';
 	int type = 0;
 	while (!(piece->face & (1 << type))) type++;
-	//return PIECES[(bool) (piece->face & UNICODE)][(bool) (piece->face & BLACK)][type];
-	// user SETTINGS_UNICODE_MODE
+	// use SETTINGS_UNICODE_MODE
 	return PIECES[SETTINGS_UNICODE_MODE][(bool) (piece->face & BLACK)][type];
 }
 
@@ -109,7 +108,6 @@ static piece_t* init_piece(short i, short j) {
 	piece_t *piece = (piece_t*) malloc(sizeof(piece_t));
 	memset(piece, 0, sizeof(piece_t));
 
-	piece->face |= UNICODE;
 	if (i >= 6) piece->face |= BLACK;
 	if (i == 1 || i == 6) {
 		piece->face |= PAWN;

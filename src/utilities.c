@@ -361,7 +361,6 @@ history_t* load_hstk (const timestamp_t timestamp) {
 		if (piece) free(piece);
 		fprintf(stderr, "error while loading file... INVALID SAVE FILE");
 		delete_history(history);
-// 		exit(EXIT_FAILURE);
 		return NULL;
 	}
 

@@ -6,7 +6,6 @@
 #define swap(x, y, type)	{type t = x; x = y; y = t;}
 #define min(x, y)			((x) < (y) ? (x) : (y))
 
-//#define FILENAME_SIZE	(TIMESTAMP_SIZE + 5)
 
 extern	char*	save_directory;
 extern	int		save_directory_size;

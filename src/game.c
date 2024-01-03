@@ -57,7 +57,7 @@ enum game_return_code init_game(const timestamp_t load_timestamp) {
 
 	getmaxyx(stdscr, term_h, term_w);
 
-	// custom macro in game.h to create new win with parameters associated with window's name
+	// custom macro in main.h to create new win with parameters associated with window's name
 	initialize_with_box(game_scr);
 	initialize_with_box(menu_scr);
 	initialize_with_box(plr1_scr);
@@ -234,8 +234,6 @@ static enum game_return_code game_over (board_t *board, history_t * history) {
 	if (board->result == PENDING)
 		return CONTINUE;
 
-// 	del_game_wins();
-
 	initialize_with_box(game_over_scr);
 
 	bool is_saved = false;
@@ -374,7 +372,6 @@ static void show_captured (const board_t *board) {
 	wclear(plr1_scr);
 	box(plr1_scr, 0, 0);
 
-// 	bool is_unicode = is_unicode(board->kings[0]->piece->face);
 	// use SETTINGS_UNICODE_MODE
 	bool is_unicode = SETTINGS_UNICODE_MODE;
 	const int V_OFFSET = 1, H_OFFSET = 1, WSTR_SIZE = 7;

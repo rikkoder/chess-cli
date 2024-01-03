@@ -396,69 +396,6 @@ static tile_t** pawn_moves (board_t *board, const tile_t *tile, const history_t 
 		}
 	}
 
-/* 	if (color == BLACK) {
-		int origin_row = (color == BLACK ? 6: 1);
-		int enemy_origin_row = (color == BLACK ? 1: 6);
-		int forward = (color == BLACK ? -1: 1);
-
-		// double step
-		if (row == origin_row && board->tiles[row + forward][col].piece == NULL && board->tiles[row + 2*forward][col].piece == NULL)
-			moves[idx++] = &board->tiles[row + 2*forward][col];
-
-		// single step
-		dest = &board->tiles[row + forward][col];
-		if (dest->piece == NULL)
-			moves[idx++] = dest;
-
-		// attack moves
-		for (short i = -1; i < 2; i++) {
-			if (i == 0 || col + i < 0 || col + i > 7)
-				continue;
-			dest = &board->tiles[row + forward][col+i];
-			dest_face = (dest->piece ? dest->piece->face : NO_PIECE);
-			if (dest_face != NO_PIECE && !((dest_face & BLACK) == color)) {
-				moves[idx++] = dest;
-				continue;
-			}
-
-			// en passant
-			if (history == NULL || get_size(history) < 2 || row != (origin_row + 3*forward))
-				continue;
-			tile_t side_tile = board->tiles[row][col+i];
-			tile_t side_tile_origin = board->tiles[enemy_origin_row][col+i];
-			face_t side_face = (side_tile.piece ? side_tile.piece->face : NO_PIECE);
-			face_t side_origin_face = (side_tile_origin.piece ? side_tile_origin.piece->face : NO_PIECE);
-			if ((side_face & PAWN) && !(side_origin_face & PAWN) && (side_face & BLACK) != color) {
-				const board_t *bef_prev_move_board = peek(history, 2);
-				tile_t enemy_pawn_origin = bef_prev_move_board->tiles[enemy_origin_row][col+i];
-				face_t enemy_pawn_origin_face = (enemy_pawn_origin.piece ? enemy_pawn_origin.piece->face : NO_PIECE);
-				if ((enemy_pawn_origin_face & PAWN) && (enemy_pawn_origin_face & BLACK) != color)
-					moves[idx++] = dest;
-			}
-		}
-	} else {
-		// double step
-		if (row == 1 && board->tiles[row+2][col].piece == NULL)
-			moves[idx++] = &board->tiles[row+2][col];
-
-		// single step
-		dest = &board->tiles[row+1][col];
-		if (dest->piece == NULL)
-			moves[idx++] = dest;
-
-		// attack moves
-		for (short i = -1; i < 2; i++) {
-			if (i == 0 || col + i < 0 || col + i > 7)
-				continue;
-			dest = &board->tiles[row+1][col+i];
-			dest_face = (dest->piece ? dest->piece->face : NO_PIECE);
-			if (dest_face != NO_PIECE && !((dest_face & BLACK) == color))
-				moves[idx++] = dest;
-		}
-
-		// en passant
-	} */
-
 	return moves;
 }
 

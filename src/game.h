@@ -4,7 +4,7 @@
 #include "main.h"
 #include "history.h"
 
-// to make stdscr compatible with init and trans macros
+// to make stdscr compatible with initialize_without_box and translate_without_box macros
 #define stdscr_h term_h
 #define stdscr_w term_w
 #define stdscr_y 0

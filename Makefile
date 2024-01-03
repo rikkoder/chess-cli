@@ -4,7 +4,11 @@ else
 	PROGRAM = chess-cli
 endif
 
-SRC = main.c main_menu.c game.c utilities.c board.c chess_engine.c history.c load_menu.c
+# SRC = main.c main_menu.c game.c utilities.c board.c chess_engine.c history.c load_menu.c
+SRC_DIR = ./src
+BUILD_DIR = ./build
+DEBUG_DIR = ./debug
+SRC = $(SRC_DIR)/*.c
 LDFLAGS += -lncurses
 CFLAGS += -Wall
 CC = gcc
@@ -15,19 +19,24 @@ SAVE_DIR = .saves
 PGN_DIR = pgn-exports
 
 .PHONY: install debug clean uninstall
-install: $(PROGRAM)
+install: $(BUILD_DIR)/$(PROGRAM)
 
-$(PROGRAM): $(SRC)
-	$(CC) $(CFLAGS) -o $(PROGRAM) $(SRC) $(LDFLAGS)
+$(BUILD_DIR)/$(PROGRAM): $(SRC)
+	mkdir -p $(BUILD_DIR)
+	$(CC) $(CFLAGS) -o $(BUILD_DIR)/$(PROGRAM) $(SRC) $(LDFLAGS)
 	mkdir -p $(HOME)/$(BASE_DIR)/$(SAVE_DIR)
 	mkdir -p $(HOME)/$(BASE_DIR)/$(PGN_DIR)
-	cp $(PROGRAM) $(HOME)/.local/bin
+	cp $(BUILD_DIR)/$(PROGRAM) $(HOME)/.local/bin
 
-debug:
-	$(CC) $(CFLAGS) $(DEBUGFLAGS) -o $(PROGRAM) $(SRC) $(LDFLAGS)
+debug: $(DEBUG_DIR)/$(PROGRAM)
+
+$(DEBUG_DIR)/$(PROGRAM): $(SRC)
+	mkdir -p $(DEBUG_DIR)
+	$(CC) $(CFLAGS) $(DEBUGFLAGS) -o $(DEBUG_DIR)/$(PROGRAM) $(SRC) $(LDFLAGS)
 
 clean:
-	rm $(PROGRAM)
+	rm -rf $(BUILD_DIR)
+	rm -rf $(DEBUG_DIR)
 
 uninstall: clean
 	rm $(HOME)/.local/bin/$(PROGRAM)

@@ -6,8 +6,6 @@
 #include <stdbool.h>
 
 #define ASCII			0
-#define UNICODE			(1 << 7)
-#define is_unicode(x)	(x & UNICODE ? 1: 0)
 
 #define WHITE			0
 #define BLACK			(1 << 6)
