@@ -34,6 +34,7 @@ history_t*			reverse_history	(const history_t *history);
 void				update_result	(history_t *history);
 enum result			get_result		(const history_t *history);
 void				get_players		(const history_t *history, player_t *plr1, player_t *plr2);
+void				init_player		(player_t *plr, const char *const name, const enum player_type type);
 
 
 #endif

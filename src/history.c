@@ -152,6 +152,12 @@ void get_players (const history_t *history, player_t *plr1, player_t *plr2) {
 }
 
 
+void init_player (player_t *plr, const char *const name, const enum player_type type) {
+	strncpy(plr->name, name, sizeof(player_name_t));
+	plr->type = type;
+}
+
+
 static const board_node_t* peek (const history_t *history, int n) {
 	if (n >= history->size || n < 0)
 		return NULL;

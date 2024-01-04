@@ -19,14 +19,14 @@ static	int				term_h;
 static	int				term_w;
 static	bool			onboard;
 
-static	void					draw_board		(const board_t *board, const short sel_tile[2], const short cur_tile[2]);
-static	void					draw_tile		(int y, int x, bool is_cur, bool is_sel, bool is_avail);
-static	enum game_return_code	game_over		(board_t *board, history_t *history);
-static	void					del_game_wins	(void);
-static	void					show_history	(history_t *history);
-static	void					show_captured	(const board_t *board);
-static	void					show_menu		(void);
-static	void					undo_game		(board_t *board, history_t *history);
+static	void					draw_board			(const board_t *board, const short sel_tile[2], const short cur_tile[2]);
+static	void					draw_tile			(int y, int x, bool is_cur, bool is_sel, bool is_avail);
+static	enum game_return_code	game_over			(board_t *board, history_t *history);
+static	void					del_game_wins		(void);
+static	void					show_history		(history_t *history);
+static	void					show_player_info	(const board_t *board, const player_t plr1, const player_t plr2);
+static	void					show_menu			(void);
+static	void					undo_game			(board_t *board, history_t *history);
 
 
 enum game_return_code init_game(const timestamp_t load_timestamp) {
@@ -35,15 +35,17 @@ enum game_return_code init_game(const timestamp_t load_timestamp) {
 	// load this part from saved file to load a game
 	board_t *board = (board_t *) calloc(1, sizeof(board_t));
 	history_t *history = NULL;
+	player_t plr1, plr2;
 	if (load_timestamp == NULL) {
 		init_board(board);
 
 		// for the moment let players be HUMAN (2p local)
-		player_t plr1 = { "Player1", HUMAN };
-		player_t plr2 = { "Player2", HUMAN };
+		init_player(&plr1, "Player1", HUMAN);
+		init_player(&plr2, "Player2", HUMAN);
 		history = create_history(plr1, plr2);
 	} else {
 		history = load_hstk(load_timestamp);
+		get_players(history, &plr1, &plr2);
 		if (history == NULL)
 			return INVALID_LOAD;
 		copy_board(board, peek_board(history, 0));
@@ -70,7 +72,7 @@ enum game_return_code init_game(const timestamp_t load_timestamp) {
 	wrefresh(menu_scr);
 
 	show_history(history);
-	show_captured(board);
+	show_player_info(board, plr1, plr2);
 
 	while (true) {
 		if (key == KEY_RESIZE) {
@@ -136,7 +138,7 @@ enum game_return_code init_game(const timestamp_t load_timestamp) {
 
 		draw_board(board, sel_tile, cur_tile);
 		show_history(history);
-		show_captured(board);
+		show_player_info(board, plr1, plr2);
 		show_menu();
 
 		wrefresh(stdscr);
@@ -368,7 +370,13 @@ static void show_history (history_t *history) {
 }
 
 
-static void show_captured (const board_t *board) {
+static void show_player_info (const board_t *board, const player_t plr1, const player_t plr2) {
+	/*
+	 *	FORMAT TO DISPLAY PLAYER INFO
+	 *
+	 *	CAPTRUED INFO - PLAYER_TYPE - PLAYER_NAME - TURN - TIMER
+	 */
+
 	wclear(plr1_scr);
 	box(plr1_scr, 0, 0);
 
@@ -384,12 +392,50 @@ static void show_captured (const board_t *board) {
 		mvwaddnwstr(plr2_scr, V_OFFSET, (i*WSTR_SIZE) + H_OFFSET, wstr, WSTR_SIZE);
 	}
 
+	const CAPTURED_SIZE = (PIECE_TYPES-1) * WSTR_SIZE;
+	char plr1_type_char, plr2_type_char;
+	switch (plr1.type) {
+		case HUMAN:
+			plr1_type_char = 'H';
+			break;
+		case LAN:
+			plr1_type_char = 'L';
+			break;
+		case ONLINE:
+			plr1_type_char = 'O';
+			break;
+		default:
+			plr1_type_char = 'A';
+	}
+	switch (plr2.type) {
+		case HUMAN:
+			plr2_type_char = 'H';
+			break;
+		case LAN:
+			plr2_type_char = 'L';
+			break;
+		case ONLINE:
+			plr2_type_char = 'O';
+			break;
+		default:
+			plr2_type_char = 'A';
+	}
+	const PLAYER_INFO_SIZE = 3 + sizeof(player_name_t) + 3 + 1;	// [TYPE]NAME(TURN)
+	char plr1_info[PLAYER_INFO_SIZE], plr2_info[PLAYER_INFO_SIZE];
+	snprintf(plr1_info, PLAYER_INFO_SIZE, "[%c]%-*s(%c)", plr1_type_char, sizeof(player_name_t), plr1.name, (board->chance == WHITE ? '*': ' '));
+	snprintf(plr2_info, PLAYER_INFO_SIZE, "[%c]%-*s(%c)", plr2_type_char, sizeof(player_name_t), plr2.name, (board->chance == BLACK ? '*': ' '));
+	mvwaddnstr(plr1_scr, V_OFFSET, H_OFFSET + CAPTURED_SIZE, plr1_info, PLAYER_INFO_SIZE);
+	mvwaddnstr(plr2_scr, V_OFFSET, H_OFFSET + CAPTURED_SIZE, plr2_info, PLAYER_INFO_SIZE);
+
 	wrefresh(plr1_scr);
 	wrefresh(plr2_scr);
 }
 
 
 static void show_menu (void) {
+	wclear(menu_scr);
+	wrefresh(menu_scr);
+
 	const int NO_OF_OPTS = 5;
 	const int OPTS_SIZE = 14;
 	const int V_OFFSET = 1, H_OFFSET = 3;

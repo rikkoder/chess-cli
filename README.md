@@ -32,4 +32,5 @@ The project is currently under development with some features implemented while 
 - [ ] ONLINE
 - [ ] dynamic size (remove huds for smaller windows)
 - [ ] add notation based input
+- [ ] add assist mode (show possible moves, threat and check)
 
