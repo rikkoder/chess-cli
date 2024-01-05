@@ -65,9 +65,10 @@
 //#endif
 
 
-enum game_return_code	{QUIT, RESTART, CONTINUE, INVALID_LOAD};
+enum game_return_code	{ QUIT, RESTART, CONTINUE, INVALID_LOAD, _PLAY_ERROR };
+enum game_mode_t		{ HUMAN_MODE, AI_MODE, LOAD_MODE };
 
-enum game_return_code	init_game	(const timestamp_t load_timestamp);
+enum game_return_code	init_game	(const enum game_mode_t game_mode, const timestamp_t load_timestamp);
 
 
 #endif

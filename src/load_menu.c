@@ -134,11 +134,11 @@ static timestamp_t* collect_save_files (int *saves_count) {
 			if (_saves_count < saves_capacity) {
 				strncpy(saves[_saves_count++], subdir->d_name, TIMESTAMP_SIZE);
 			} else {
-				if (saves_capacity >= UINT_MAX/2) {
-					fprintf(stderr, "can't load.. too much save files!");
-					exit(EXIT_FAILURE);
+				if (saves_capacity >= UINT_MAX/2 && saves_capacity < UINT_MAX) {
+					saves_capacity = UINT_MAX;
+				} else {
+					saves_capacity <<= 1;
 				}
-				saves_capacity <<= 1;
 				saves = realloc(saves, saves_capacity * sizeof(timestamp_t));
 				if (saves == NULL) {
 					fprintf(stderr, "can't load.. too much save files!");

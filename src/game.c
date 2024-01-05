@@ -25,29 +25,35 @@ static	enum game_return_code	game_over			(board_t *board, history_t *history);
 static	void					del_game_wins		(void);
 static	void					show_history		(history_t *history);
 static	void					show_player_info	(const board_t *board, const player_t plr1, const player_t plr2);
+static	char					get_player_type_char	(const player_t plr);
 static	void					show_menu			(void);
 static	void					undo_game			(board_t *board, history_t *history);
+static	bool					_play				(board_t *board, history_t *history);
 
 
-enum game_return_code init_game(const timestamp_t load_timestamp) {
+enum game_return_code init_game(const enum game_mode_t game_mode, const timestamp_t load_timestamp) {
 	enum game_return_code return_code = QUIT;
 
 	// load this part from saved file to load a game
 	board_t *board = (board_t *) calloc(1, sizeof(board_t));
 	history_t *history = NULL;
 	player_t plr1, plr2;
-	if (load_timestamp == NULL) {
+	if (game_mode != LOAD_MODE) {
 		init_board(board);
 
-		// for the moment let players be HUMAN (2p local)
-		init_player(&plr1, "Player1", HUMAN);
-		init_player(&plr2, "Player2", HUMAN);
+		if (game_mode == HUMAN_MODE) {
+			init_player(&plr1, "Player1", HUMAN);
+			init_player(&plr2, "Player2", HUMAN);
+		} else if (game_mode == AI_MODE) {
+			init_player(&plr1, "Player1", HUMAN);
+			init_player(&plr2, "AI LVL 2", AI_LVL2);
+		}
 		history = create_history(plr1, plr2);
 	} else {
 		history = load_hstk(load_timestamp);
-		get_players(history, &plr1, &plr2);
 		if (history == NULL)
 			return INVALID_LOAD;
+		get_players(history, &plr1, &plr2);
 		copy_board(board, peek_board(history, 0));
 	}
 
@@ -112,13 +118,20 @@ enum game_return_code init_game(const timestamp_t load_timestamp) {
 							if ((return_code = game_over(board, history)) != CONTINUE)
 								break;
 						}
+						if(!_play(board, history)) {
+							fprintf(stderr, "some error occured during _play...");
+							return_code = _PLAY_ERROR;
+							break;
+						}
 					}
 
 					clear_dest(board);
 					sel_tile[0] = INVALID_ROW;
 					sel_tile[1] = INVALID_COL;
-					if (moves != NULL)
+					if (moves != NULL) {
 						free(moves);
+						moves = NULL;
+					}
 				} else if (board->tiles[cur_tile[0]][cur_tile[1]].piece != NULL && (board->tiles[cur_tile[0]][cur_tile[1]].piece->face & COLOR_BIT) == board->chance){
 					sel_tile[0] = cur_tile[0];
 					sel_tile[1] = cur_tile[1];
@@ -393,42 +406,35 @@ static void show_player_info (const board_t *board, const player_t plr1, const p
 	}
 
 	const CAPTURED_SIZE = (PIECE_TYPES-1) * WSTR_SIZE;
-	char plr1_type_char, plr2_type_char;
-	switch (plr1.type) {
-		case HUMAN:
-			plr1_type_char = 'H';
-			break;
-		case LAN:
-			plr1_type_char = 'L';
-			break;
-		case ONLINE:
-			plr1_type_char = 'O';
-			break;
-		default:
-			plr1_type_char = 'A';
-	}
-	switch (plr2.type) {
-		case HUMAN:
-			plr2_type_char = 'H';
-			break;
-		case LAN:
-			plr2_type_char = 'L';
-			break;
-		case ONLINE:
-			plr2_type_char = 'O';
-			break;
-		default:
-			plr2_type_char = 'A';
-	}
 	const PLAYER_INFO_SIZE = 3 + sizeof(player_name_t) + 3 + 1;	// [TYPE]NAME(TURN)
 	char plr1_info[PLAYER_INFO_SIZE], plr2_info[PLAYER_INFO_SIZE];
-	snprintf(plr1_info, PLAYER_INFO_SIZE, "[%c]%-*s(%c)", plr1_type_char, sizeof(player_name_t), plr1.name, (board->chance == WHITE ? '*': ' '));
-	snprintf(plr2_info, PLAYER_INFO_SIZE, "[%c]%-*s(%c)", plr2_type_char, sizeof(player_name_t), plr2.name, (board->chance == BLACK ? '*': ' '));
+	snprintf(plr1_info, PLAYER_INFO_SIZE, "[%c]%-*s(%c)", get_player_type_char(plr1), sizeof(player_name_t), plr1.name, (board->chance == WHITE ? '*': ' '));
+	snprintf(plr2_info, PLAYER_INFO_SIZE, "[%c]%-*s(%c)", get_player_type_char(plr2), sizeof(player_name_t), plr2.name, (board->chance == BLACK ? '*': ' '));
 	mvwaddnstr(plr1_scr, V_OFFSET, H_OFFSET + CAPTURED_SIZE, plr1_info, PLAYER_INFO_SIZE);
 	mvwaddnstr(plr2_scr, V_OFFSET, H_OFFSET + CAPTURED_SIZE, plr2_info, PLAYER_INFO_SIZE);
 
 	wrefresh(plr1_scr);
 	wrefresh(plr2_scr);
+}
+
+
+static char get_player_type_char (const player_t plr) {
+	switch (plr.type) {
+		case HUMAN:
+			return 'H';
+		case LAN:
+			return 'L';
+		case ONLINE:
+			return 'O';
+		case AI_LVL0:
+			return '0';
+		case AI_LVL1:
+			return '1';
+		case AI_LVL2:
+			return '2';
+		default:
+			return 'A';
+	}
 }
 
 
@@ -479,4 +485,18 @@ static void undo_game (board_t *board, history_t *history) {
 	else
 		copy_board(board, peek_board(history, 0));
 	clear_dest(board);
+}
+
+
+static bool _play (board_t *board, history_t *history) {
+	player_t players[2];
+	get_players(history, players, players+1);
+	int turn = (board->chance & BLACK ? 1: 0);
+	if (players[turn].type == HUMAN)
+		return true;
+
+	// create condition for other types
+
+	// AI
+	return ai_play(board, history);
 }

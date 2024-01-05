@@ -1,5 +1,5 @@
 .gitignore
-Session.vim
+*.vim
 gdb.txt
 todo.txt
 *.hstk

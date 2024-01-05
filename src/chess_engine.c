@@ -117,6 +117,8 @@ bool move_piece (board_t *board, short *dest_tile, short *src_tile, history_t *h
 	if (r1 == INVALID_ROW || r2 == INVALID_ROW || c1 == INVALID_COL || c2 == INVALID_COL || board->tiles[r1][c1].piece == NULL)
 		return false;
 
+	
+	/* CAN NOT REMOVE can_be_dest checking, removing it breaks the game as player can move anywhare safe */
 	// impossible move
 	if (board->tiles[r1][c1].piece == NULL || !(board->tiles[r2][c2].can_be_dest))
 		return false;

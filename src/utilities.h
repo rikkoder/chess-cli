@@ -5,6 +5,7 @@
 
 #define swap(x, y, type)	{type t = x; x = y; y = t;}
 #define min(x, y)			((x) < (y) ? (x) : (y))
+#define max(x, y)			((x) > (y) ? (x) : (y))
 
 
 extern	char*	save_directory;
