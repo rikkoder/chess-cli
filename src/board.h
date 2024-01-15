@@ -55,6 +55,7 @@ typedef struct board_t {
 	chance_t chance;
 	enum result result;
 	short captured[2][6];
+	bool is_fake;
 } board_t;
 
 
@@ -63,6 +64,7 @@ void		init_board					(board_t *board);
 void		copy_board					(board_t *dest_board, const board_t *src_board);
 void		delete_board				(board_t *board);
 char		get_piece_for_move_notation	(const piece_t *piece);
+void		promote_pawn				(piece_t *piece, const face_t piece_type);
 
 
 #endif

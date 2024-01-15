@@ -478,7 +478,12 @@ static void show_menu (void) {
 
 
 static void undo_game (board_t *board, history_t *history) {
+	player_t players[2];
+	get_players(history, players, players + 1);
 	undo(history);
+	// extra undo for AI
+	if (players[0].type != HUMAN || players[1].type != HUMAN)
+		undo(history);
 	const board_t *prev_board = peek_board(history, 0);
 	if (prev_board == NULL)
 		init_board(board);

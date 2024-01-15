@@ -54,8 +54,6 @@ void init_board(board_t *board) {
 
 	board->chance = WHITE;
 	board->result = PENDING;
-
-	memset(board->captured, 0, sizeof(board->captured));
 }
 
 
@@ -70,6 +68,7 @@ void copy_board (board_t *dest_board, const board_t *src_board) {
 
 	memset(dest_board, 0, sizeof(board_t));
 	memcpy(dest_board, src_board, sizeof(board_t));
+	dest_board->is_fake = src_board->is_fake;
 	for (short i = 0; i < 8; i++) {
 		for (short j = 0; j < 8; j++) {
 			if (dest_board->tiles[i][j].piece == NULL)
@@ -97,6 +96,14 @@ void delete_board (board_t *board) {
 				free(board->tiles[i][j].piece);
 	
 	free(board);
+}
+
+
+void promote_pawn (piece_t *piece, const face_t piece_type) {
+	if (piece == NULL || !(piece->face & PAWN))
+		return;
+	piece->face ^= PAWN;
+	piece->face |= piece_type;
 }
 
 

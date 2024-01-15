@@ -4,7 +4,7 @@
 #include "board.h"
 #include "history.h"
 
-#define MAX_MOVES 28
+#define MAX_MOVES 29	// QUEEN has max moves (7 * 4 = 28) + 1 for NULL senitel
 
 tile_t**		find_moves			(board_t *board, const tile_t *tile, const history_t *history);
 bool			move_piece			(board_t *board, short *dest_tile, short *src_tile, history_t *history);

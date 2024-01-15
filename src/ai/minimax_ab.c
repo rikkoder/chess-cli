@@ -5,7 +5,7 @@
 
 #include "minimax_ab.h"
 #include "../chess_engine.h"
-#include "../utilities.h"	// min and max
+#include "../utilities.h"	// min, max and shuffle
 
 
 typedef struct {
@@ -22,7 +22,10 @@ bool minimax_ab_play (board_t *board, history_t *history, const minimax_ab_ai_t 
 	time_t t;
 	// initialize random no generator
 	srand((unsigned int) time(&t));
+
+	// find best move
 	move_t best_move = _minimax_ab(board, history, MIN_BOARD_VALUE, MAX_BOARD_VALUE, minimax_ab_ai.depth, minimax_ab_ai.eval_func);
+
 	/* since the move calculated is valid, setting can_be_dest of the target to true to make it work with chess_engine.c:move_piece function. */
 	board->tiles[best_move.dest_tile[0]][best_move.dest_tile[1]].can_be_dest = true;
 	bool return_value = move_piece(board, best_move.dest_tile, best_move.src_tile, history);
@@ -38,7 +41,7 @@ static move_t _minimax_ab (board_t *board, history_t *history, board_value_t alp
 	best_move.src_tile[1] = -1;
 	best_move.dest_tile[0] = -1;
 	best_move.dest_tile[1] = -1;
-	if (depth == 0)
+	if (depth == 0 || is_game_finished(board, history))
 		return best_move;
 
 	unsigned long long int moves_capacity = 50;
@@ -86,18 +89,21 @@ static move_t _minimax_ab (board_t *board, history_t *history, board_value_t alp
 		return best_move;
 	}
 
+	shuffle(moves, moves_count, sizeof(moves[0]));
+
 	if (board->chance == WHITE) {
 		best_move.board_value = MIN_BOARD_VALUE;
 		for (int i = 0; i < moves_count; i++) {
 			// simulate the move
+			/* set board->is_fake as true to hint the chess_engine.c that HUMAN moves are being simulated (especially, chess_engine.c:move_piece). set before every move as the board is copied from history after undo and will set board->is_fake to false after copying last real board */
+			board->is_fake = true;	
 			/* since the moves array contains valid destinations, setting can_be_dest of the target to true to make it work with chess_engine.c:move_piece function. */
 // 			tile_t *dest[1] = { &(board->tiles[moves[i].dest_tile[0]][moves[i].dest_tile[1]]) };
 // 			set_dest(board, dest);
 			board->tiles[moves[i].dest_tile[0]][moves[i].dest_tile[1]].can_be_dest = true;
 			if(!move_piece(board, moves[i].dest_tile, moves[i].src_tile, history))
 				continue;
-
-			clear_dest(board);
+			board->tiles[moves[i].dest_tile[0]][moves[i].dest_tile[1]].can_be_dest = false;
 
 			// evaluate
 			move_t move_eval = _minimax_ab(board, history, alpha, beta, depth-1, eval_func);
@@ -111,12 +117,16 @@ static move_t _minimax_ab (board_t *board, history_t *history, board_value_t alp
 			// order dependent strategy
 			if (moves[i].board_value > best_move.board_value) {
 				best_move = moves[i];
-			} else if (moves[i].board_value == best_move.board_value) {
-				// use random strategy
-				if (rand() & 1) {
-					best_move = moves[i];
-				}
 			}
+			
+			/* not updating for equal evaluated moves as they might be result of unoptimized pruned branch */
+/* 			else if (moves[i].board_value == best_move.board_value) {
+				// use random strategy
+				// comment random strategy for reporducibility of same move and finiding bug in ab - pruning
+// 				if (rand() % (moves_count/2) == 0) {
+					best_move = moves[i];
+// 				}
+			} */
 
 			// update alpha
 			alpha = max(alpha, best_move.board_value);
@@ -129,14 +139,15 @@ static move_t _minimax_ab (board_t *board, history_t *history, board_value_t alp
 		best_move.board_value = MAX_BOARD_VALUE;
 		for (int i = 0; i < moves_count; i++) {
 			// simulate the move
+			/* set board->is_fake as true to hint the chess_engine.c that HUMAN moves are being simulated (especially, chess_engine.c:move_piece). set before every move as the board is copied from history after undo and will set board->is_fake to false after copying last real board */
+			board->is_fake = true;	
 			/* since the moves array contains valid destinations, setting can_be_dest of the target to true to make it work with chess_engine.c:move_piece function. */
 // 			tile_t *dest[1] = { &(board->tiles[moves[i].dest_tile[0]][moves[i].dest_tile[1]]) };
 // 			set_dest(board, dest);
 			board->tiles[moves[i].dest_tile[0]][moves[i].dest_tile[1]].can_be_dest = true;
 			if(!move_piece(board, moves[i].dest_tile, moves[i].src_tile, history))
 				continue;
-
-			clear_dest(board);
+			board->tiles[moves[i].dest_tile[0]][moves[i].dest_tile[1]].can_be_dest = false;
 
 			// evaluate
 			move_t move_eval = _minimax_ab(board, history, alpha, beta, depth-1, eval_func);
@@ -150,12 +161,16 @@ static move_t _minimax_ab (board_t *board, history_t *history, board_value_t alp
 			// order dependent strategy
 			if (moves[i].board_value < best_move.board_value) {
 				best_move = moves[i];
-			} else if (moves[i].board_value == best_move.board_value) {
-				// use random strategy
-				if (rand() & 1) {
-					best_move = moves[i];
-				}
 			}
+			 
+			/* not updating for equal evaluated moves as they might be result of unoptimized pruned branch */
+/* 			else if (moves[i].board_value == best_move.board_value) {
+				// use random strategy
+				// comment random strategy for reporducibility of same move and finiding bug in ab - pruning
+// 				if (rand() % (moves_count/2) == 0) {
+					best_move = moves[i];
+// 				}
+			} */
 
 			// update beta
 			beta = min(beta, best_move.board_value);
@@ -166,6 +181,10 @@ static move_t _minimax_ab (board_t *board, history_t *history, board_value_t alp
 		}
 	}
 
+	// make the board->is_fake false before returning so that game can continue as normal for HUMAN, also AI will set board->is_fake to true before recursively calling this function anyway.
+	board->is_fake = false;
+	// clear_dest so that no tile remains marked as can_be_dest
+	clear_dest(board);
 	free(moves);
 	return best_move;
 }

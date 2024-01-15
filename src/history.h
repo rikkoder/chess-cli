@@ -3,7 +3,7 @@
 
 #include "board.h"
 
-#define MAX_MOVE_NOTATION_SIZE	7
+#define MAX_MOVE_NOTATION_SIZE	10
 #define TIMESTAMP_SIZE			14
 #define	PLAYERNAME_SIZE			10
 
@@ -12,7 +12,7 @@ typedef	char				timestamp_t[TIMESTAMP_SIZE+1];
 typedef	char				player_name_t[PLAYERNAME_SIZE+1];
 typedef	struct history_t	history_t;
 
-enum	player_type	{HUMAN, LAN, ONLINE, AI_LVL0, AI_LVL1, AI_LVL2, PLAYER_TYPE_ERROR};
+enum	player_type	{HUMAN, LAN, ONLINE, AI_LVL0, AI_LVL1, AI_LVL2, AI_LVL3, PLAYER_TYPE_ERROR};
 
 typedef struct player_t {
 	player_name_t name;

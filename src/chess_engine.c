@@ -3,6 +3,8 @@
 
 #include "chess_engine.h"
 #include "utilities.h"
+#include "game_menus.h"
+#include "board.h"
 
 #define INIT_ADD_MOVES \
 	tile_t **moves = (tile_t**) malloc(MAX_MOVES * sizeof(tile_t*));\
@@ -159,6 +161,18 @@ bool move_piece (board_t *board, short *dest_tile, short *src_tile, history_t *h
 	board->tiles[r1][c1].piece = NULL;
 	board->tiles[r2][c2].piece->is_moved = true;
 
+	// if at end, promote the PAWN and add to the move_notation
+	piece_t *piece = board->tiles[r2][c2].piece;
+	if ((piece->face & PAWN) && ((is_black(piece->face) && r2 == 0) || (!is_black(piece->face) && r2 == 7))) {
+		int k = 0;
+		while (k < MAX_MOVE_NOTATION_SIZE && move_notation[k] != '\0') k++;
+		/* game_menus.c:show_promote_menu shouldn't be called for AI. Can't condition on if turn is of HUMAN or AI as AI will simmulate HUMAN's turn also. Use new bool member 'is_fake' of board_t which is set to true when board is being simulated by AI. */
+		if (board->is_fake)
+			promote_pawn(piece, QUEEN);	// AI assumes best move
+		else
+			promote_pawn(piece, show_promote_menu(is_black(piece->face)));
+		move_notation[k++] = PIECES[ASCII][is_black(piece->face)][piece_index(piece->face)];
+	}
 
 	// update king position in board
 	if (piece_face & KING)
@@ -171,9 +185,10 @@ bool move_piece (board_t *board, short *dest_tile, short *src_tile, history_t *h
 	while (k < MAX_MOVE_NOTATION_SIZE && move_notation[k] != '\0') k++;
 	color_t color = (board->chance & BLACK ? 1: 0);
 	if (is_game_finished(board, history) && (board->result == BLACK_WON || board->result == WHITE_WON))
-		move_notation[k] = '#';
+		move_notation[k++] = '#';
 	else if (board->kings[color]->has_check[color])
-		move_notation[k] = '+';
+		move_notation[k++] = '+';
+	move_notation[k] = '\0';
 
 	if (history)
 		add_move(history, board, move_notation);
@@ -456,6 +471,7 @@ static void update_check_map (board_t *board) {
 			tile_t **moves = NULL;
 			int type = 1;
 			while (!(tile->piece->face & type)) type <<= 1;
+			// special case for PAWN as it's all possible moves arn't attacking moves
 			if (type == PAWN) {
 				moves = (tile_t**) malloc(2 * sizeof(tile_t*));
 				memset(moves, 0, 2 * sizeof(tile_t*));
@@ -463,6 +479,10 @@ static void update_check_map (board_t *board) {
 				int row = i + 1;
 				if (color == 1)
 					row = i - 1;
+
+				/* checking for PAWN at last rows, (although they won't be PAWN and promoted to another piece type) but for working of AI which sees in future include this check. Promote to another piece in AI's perspective to predict better moves */
+				if (row < 0 || row > 7)
+					continue;
 				
 				if (j == 0)
 					moves[0] = &(board->tiles[row][j+1]);

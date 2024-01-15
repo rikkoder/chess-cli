@@ -1,8 +1,8 @@
 #include "eval_funcs.h"
 
-typedef	short	piece_value_t;
+typedef	int	piece_value_t;
 
-static	const	piece_value_t	piece_values[PIECE_TYPES]	 =	{ 0, 9, 5, 3, 3, 1 };	// in same order as board.c:PIECES
+static	const	piece_value_t	piece_values[PIECE_TYPES]	 =	{ 1000, 9, 5, 3, 3, 1 };	// in same order as board.c:PIECES
 
 
 board_value_t piece_value_based_static_eval (const board_t *board) {

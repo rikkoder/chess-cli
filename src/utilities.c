@@ -524,6 +524,17 @@ bool export_pgn (const history_t *history) {
 }
 
 
+void shuffle (void *arr, size_t nmemb, size_t size) {
+	char tmp[size];
+	for (size_t i = 0; i < nmemb; i++) {
+		size_t j = (rand() * (nmemb - 1)) / RAND_MAX;
+		memcpy(tmp, arr + j * size, size);
+		memcpy(arr + j * size, arr + i * size, size);
+		memcpy(arr + i * size, tmp, size);
+	}
+}
+
+
 static void write_to_file (FILE *fp, const char buffer[], const unsigned int ptr) {
 	int ret_code = 0;
 	for (int p = 0; (ret_code != EOF) && p < ptr; p++) {

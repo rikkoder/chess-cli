@@ -17,6 +17,7 @@ char*		itoa		(int i, char *a);
 bool		save_hstk	(const history_t *history);
 history_t*	load_hstk	(const timestamp_t timestamp);
 bool		export_pgn	(const history_t *history);
+void		shuffle		(void *arr, size_t nmemb, size_t size);
 
 
 #endif
