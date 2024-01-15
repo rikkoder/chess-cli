@@ -473,6 +473,7 @@ static void show_menu (void) {
 		mvwaddnstr(menu_scr, V_OFFSET, prefix_pos[i] + H_OFFSET + 1, options[i], OPTS_SIZE);
 	}
 
+	box(menu_scr, 0, 0);
 	wrefresh(menu_scr);
 }
 
