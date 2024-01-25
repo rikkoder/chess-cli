@@ -2,7 +2,6 @@
 #include <string.h>
 
 #include "chess_engine.h"
-#include "utilities.h"
 #include "game_menus.h"
 #include "board.h"
 

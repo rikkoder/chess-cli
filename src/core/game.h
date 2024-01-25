@@ -1,7 +1,7 @@
 #ifndef GAME_H
 #define GAME_H
 
-#include "main.h"
+#include "../main.h"
 #include "history.h"
 
 // to make stdscr compatible with initialize_without_box and translate_without_box macros

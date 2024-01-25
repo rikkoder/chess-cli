@@ -1,8 +1,8 @@
 #ifndef LOAD_MENU_H
 #define LOAD_MENU_H
 
-#include "main.h"
-#include "history.h"
+#include "../main.h"
+#include "../core/history.h"
 
 #define load_menu_scr_h 20
 #define load_menu_scr_w htow(load_menu_scr_h)

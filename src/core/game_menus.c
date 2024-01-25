@@ -1,7 +1,7 @@
 #include <ncurses.h>
 
 #include "game_menus.h"
-#include "main.h"	// for init macors
+#include "../main.h"	// for init macors
 
 
 face_t show_promote_menu (const color_t color) {

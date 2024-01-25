@@ -5,7 +5,7 @@
 #include <errno.h>
 
 #include "load_menu.h"
-#include "utilities.h"
+#include "../utils/file.h"
 
 static	WINDOW	*load_menu_scr;
 static	WINDOW	*warning_scr;

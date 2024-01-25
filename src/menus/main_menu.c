@@ -4,8 +4,7 @@
 #include <stdlib.h>
 
 #include "main_menu.h"
-#include "game.h"
-#include "utilities.h"
+#include "../core/game.h"
 #include "load_menu.h"
 
 

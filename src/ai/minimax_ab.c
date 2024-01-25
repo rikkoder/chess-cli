@@ -4,8 +4,8 @@
 #include <time.h>
 
 #include "minimax_ab.h"
-#include "../chess_engine.h"
-#include "../utilities.h"	// min, max and shuffle
+#include "../core/chess_engine.h"
+#include "../utils/common.h"	// min, max and shuffle
 
 
 typedef struct {

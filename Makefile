@@ -8,7 +8,7 @@ endif
 SRC_DIR = ./src
 BUILD_DIR = ./build
 DEBUG_DIR = ./debug
-SRC = $(SRC_DIR)/*.c $(SRC_DIR)/ai/*.c
+SRC = $(SRC_DIR)/*.c $(SRC_DIR)/core/*.c $(SRC_DIR)/ai/*.c $(SRC_DIR)/menus/*.c $(SRC_DIR)/utils/*.c
 LDFLAGS += -lncurses
 CFLAGS += -Wall
 CC = gcc

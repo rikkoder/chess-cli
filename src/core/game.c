@@ -2,7 +2,8 @@
 #include <string.h>
 
 #include "game.h"
-#include "utilities.h"
+#include "../utils/common.h"
+#include "../utils/file.h"
 #include "board.h"
 #include "chess_engine.h"
 #include "history.h"

@@ -2,8 +2,8 @@
 #define MINIMAX_AB_H
 
 #include "eval_funcs.h"
-#include "../board.h"
-#include "../history.h"
+#include "../core/board.h"
+#include "../core/history.h"
 
 
 typedef struct {

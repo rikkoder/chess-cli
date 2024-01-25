@@ -3,7 +3,7 @@
 
 #include <limits.h>
 
-#include "../board.h"
+#include "../core/board.h"
 
 #define	MIN_BOARD_VALUE	INT_MIN
 #define MAX_BOARD_VALUE	INT_MAX

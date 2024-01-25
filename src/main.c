@@ -5,8 +5,8 @@
 #include <locale.h>
 
 #include "main.h"
-#include "main_menu.h"
-#include "utilities.h"
+#include "menus/main_menu.h"
+#include "utils/file.h"
 
 
 char	*save_directory		=	NULL;
