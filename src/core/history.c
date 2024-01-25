@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 #include "history.h"
+#include "chess_engine.h"
 
 typedef struct board_node_t board_node_t;
 

@@ -3,6 +3,7 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <string.h>
 
 #include "load_menu.h"
 #include "../utils/file.h"

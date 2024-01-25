@@ -2,11 +2,12 @@
 #include <string.h>
 
 #include "game.h"
-#include "../utils/common.h"
-#include "../utils/file.h"
 #include "board.h"
 #include "chess_engine.h"
 #include "history.h"
+#include "../ai/ai.h"
+#include "../utils/common.h"
+#include "../utils/file.h"
 
 
 static	WINDOW			*game_scr;

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "file.h"
+#include "common.h"
 #include "../core/history.h"
 #include "../main.h"
 #include "../menus/load_menu.h"	// for show_warning_scr
