@@ -1,6 +1,6 @@
 ﻿# chess-cli
 
-If you want to play chess without leaving your terminal, you have come to the right place. *chess-cli* is a chess written completely in C using ncurses library for TUI. The program is tested and developed on arch linux but should be compatible with most linux systems and WSL (for windows).
+If you want to play chess without leaving your terminal, you have come to the right place. *chess-cli* is a chess written completely in C using ncurses library for TUI. The program is tested and developed on arch linux but should be compatible with most linux systems, macOS and WSL (for windows).
 
 ![(screenshot of the game)](https://drive.google.com/uc?export=view&id=1pw5RNw0P2PyW4wOKw39KNQ3ZzHWv5ARx)
 
@@ -12,6 +12,11 @@ After installing above mentioned dependencies run the following command on termi
 git clone https://github.com/rikkoder/chess-cli
 make install
 ```
+> Note: If the compilation fails with error indicating `ncurses.h` not found even after installing ncurses library, try installing development libraries (with widechar support).
+> Example for Ubuntu:
+> ```bash
+> sudo apt install libncurses5-dev libncursesw5-dev
+> ```
 Now you can simply start the game from terminal by typing `chess-cli`.
 
 ## Features
@@ -26,7 +31,7 @@ The project is currently under development with some features implemented while 
 - [x] load
 - [x] pgn export
 - [ ] timer
-- [ ] vAI
+- [x] vAI
 - [ ] difficulty levels
 - [ ] 2p LAN
 - [ ] ONLINE
