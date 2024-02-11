@@ -1,7 +1,7 @@
 #ifndef MAIN_MENU_H
 #define MAIN_MENU_H
 
-#include "../main.h"
+#include "../utils/common.h"
 
 #define main_menu_scr_h 12
 #define main_menu_scr_w htow(main_menu_scr_h)

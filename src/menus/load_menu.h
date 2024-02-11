@@ -1,7 +1,7 @@
 #ifndef LOAD_MENU_H
 #define LOAD_MENU_H
 
-#include "../main.h"
+#include "../utils/common.h"
 #include "../core/history.h"
 
 #define load_menu_scr_h 20

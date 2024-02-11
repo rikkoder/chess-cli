@@ -67,7 +67,7 @@ enum game_return_code init_game(const enum game_mode_t game_mode, const timestam
 
 	getmaxyx(stdscr, term_h, term_w);
 
-	// custom macro in main.h to create new win with parameters associated with window's name
+	// custom macro in utils/common.h to create new win with parameters associated with window's name
 	initialize_with_box(game_scr);
 	initialize_with_box(menu_scr);
 	initialize_with_box(plr1_scr);
@@ -86,7 +86,7 @@ enum game_return_code init_game(const enum game_mode_t game_mode, const timestam
 		if (key == KEY_RESIZE) {
 			getmaxyx(stdscr, term_h, term_w);
 
-			// custom macro in main.h to resize, move and clear window
+			// custom macro in utils/common.h to resize, move and clear window
 			translate_with_box(game_scr);
 			translate_with_box(menu_scr);
 			translate_with_box(plr1_scr);

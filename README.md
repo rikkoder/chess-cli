@@ -38,4 +38,4 @@ The project is currently under development with some features implemented while 
 - [ ] dynamic size (remove huds for smaller windows)
 - [ ] add notation based input
 - [ ] add assist mode (show possible moves, threat and check)
-
+- [ ] custom theme support

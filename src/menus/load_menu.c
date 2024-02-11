@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "load_menu.h"
+#include "../config.h"
 #include "../utils/file.h"
 
 static	WINDOW	*load_menu_scr;

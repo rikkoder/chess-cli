@@ -1,7 +1,7 @@
 #ifndef GAME_H
 #define GAME_H
 
-#include "../main.h"
+#include "../utils/common.h"
 #include "history.h"
 
 // to make stdscr compatible with initialize_without_box and translate_without_box macros
@@ -17,9 +17,6 @@
 #define false 0
 #endif
 
-
-// this gaurd was included so that these macros aren't defined for main_menu.c as not required by main_menu, but if main_menu.h is included in this file in future it would break program as following macros won't be defined. thus commenting main_menu_h gaurd below.
-//#ifndef MAIN_MENU_H
 
 #define PAD_h 0
 #define PAD_w htow(PAD_h)
@@ -59,10 +56,6 @@
 #define game_over_scr_w htow(game_over_scr_h)
 #define game_over_scr_y ((term_h - game_over_scr_h) / 2)	// center of screen
 #define game_over_scr_x ((term_w - game_over_scr_w) / 2)	// center of screen
-
-
-// gaurd close for main_menu.h
-//#endif
 
 
 enum game_return_code	{ QUIT, RESTART, CONTINUE, INVALID_LOAD, _PLAY_ERROR };

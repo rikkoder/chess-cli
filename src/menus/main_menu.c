@@ -32,7 +32,7 @@ void init_main_menu() {
 	swprintf(woptions[QUIT_OPT], OPTS_SIZE, L"%-*s", OPTS_SIZE, "Quit");
 	int selected_opt = 0;
 
-	// custom macro in main.h to create new win with parameters associated with window's name
+	// custom macro in src/utils/common.h to create new win with parameters associated with window's name
 	initialize_with_box(main_menu_scr);
 	wrefresh(stdscr);
 	wrefresh(main_menu_scr);

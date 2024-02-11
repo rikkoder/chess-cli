@@ -4,7 +4,7 @@
 #include <ncurses.h>
 #include <locale.h>
 
-#include "main.h"
+#include "config.h"
 #include "menus/main_menu.h"
 #include "utils/file.h"
 
