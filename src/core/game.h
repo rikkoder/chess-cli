@@ -61,7 +61,18 @@
 enum game_return_code	{ QUIT, RESTART, CONTINUE, INVALID_LOAD, _PLAY_ERROR };
 enum game_mode_t		{ HUMAN_MODE, AI_MODE, LOAD_MODE };
 
-enum game_return_code	init_game	(const enum game_mode_t game_mode, const timestamp_t load_timestamp);
+typedef struct game_settings_t {
+	enum game_mode_t	game_mode;
+	union {
+		struct {
+			player_t	players[2];	// name and type (ai difficulty)
+			int			time_limit;	// in mins, 0 is off
+		};
+		timestamp_t		load_timestamp;
+	};
+} game_settings_t;
+
+enum game_return_code	init_game	(const game_settings_t game_settings);
 
 
 #endif

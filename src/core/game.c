@@ -33,26 +33,20 @@ static	void					undo_game			(board_t *board, history_t *history);
 static	bool					_play				(board_t *board, history_t *history);
 
 
-enum game_return_code init_game(const enum game_mode_t game_mode, const timestamp_t load_timestamp) {
+enum game_return_code init_game(const game_settings_t game_settings) {
 	enum game_return_code return_code = QUIT;
 
 	// load this part from saved file to load a game
 	board_t *board = (board_t *) calloc(1, sizeof(board_t));
 	history_t *history = NULL;
 	player_t plr1, plr2;
-	if (game_mode != LOAD_MODE) {
+	if (game_settings.game_mode != LOAD_MODE) {
 		init_board(board);
-
-		if (game_mode == HUMAN_MODE) {
-			init_player(&plr1, "Player1", HUMAN);
-			init_player(&plr2, "Player2", HUMAN);
-		} else if (game_mode == AI_MODE) {
-			init_player(&plr1, "Player1", HUMAN);
-			init_player(&plr2, "AI LVL 2", AI_LVL2);
-		}
+		plr1 = game_settings.players[0];
+		plr2 = game_settings.players[1];
 		history = create_history(plr1, plr2);
 	} else {
-		history = load_hstk(load_timestamp);
+		history = load_hstk(game_settings.load_timestamp);
 		if (history == NULL)
 			return INVALID_LOAD;
 		get_players(history, &plr1, &plr2);

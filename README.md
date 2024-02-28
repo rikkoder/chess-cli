@@ -32,7 +32,7 @@ The project is currently under development with some features implemented while 
 - [x] pgn export
 - [ ] timer
 - [x] vAI
-- [ ] difficulty levels
+- [x] difficulty levels
 - [ ] 2p LAN
 - [ ] ONLINE
 - [ ] dynamic size (remove huds for smaller windows)

@@ -39,6 +39,8 @@
 #define min(x, y)			((x) < (y) ? (x) : (y))
 #define max(x, y)			((x) > (y) ? (x) : (y))
 
+enum return_option_t { OKAY, CANCEL };	// OK is defined in some library
+
 char*		itoa		(int i, char *a);
 void		shuffle		(void *arr, size_t nmemb, size_t size);
 

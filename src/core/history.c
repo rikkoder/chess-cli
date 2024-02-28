@@ -36,8 +36,10 @@ history_t* create_history (const player_t plr1, const player_t plr2) {
 	struct tm tm = *localtime(&t);
 	snprintf(history->timestamp, TIMESTAMP_SIZE + 1, "%04d%02d%02d%02d%02d%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
 
-	history->players[0] = plr1;
-	history->players[1] = plr2;
+	init_player(history->players, plr1.name, plr1.type);
+	init_player(history->players+1, plr2.name, plr2.type);
+// 	history->players[0] = plr1;
+// 	history->players[1] = plr2;
 	history->result = PENDING;
 
 	return history;

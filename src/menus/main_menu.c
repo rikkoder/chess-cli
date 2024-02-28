@@ -56,10 +56,16 @@ void init_main_menu() {
 				wclear(main_menu_scr);
 				wrefresh(main_menu_scr);
 
-				enum game_return_code return_code;
-				do {
-					 return_code = init_game(HUMAN_MODE, NULL);
-				} while (return_code == RESTART);
+				// get game_settings from human_game_settings_menu
+				game_settings_t game_settings;
+				enum return_option_t return_option = init_human_game_settings_menu(&game_settings);
+
+				if (return_option == OKAY) {
+					enum game_return_code return_code;
+					do {
+						 return_code = init_game(game_settings);
+					} while (return_code == RESTART);
+				}
 
 				// redrawing after end of game
 				// size may have changed while playing game
@@ -71,10 +77,16 @@ void init_main_menu() {
 				wclear(main_menu_scr);
 				wrefresh(main_menu_scr);
 
-				enum game_return_code return_code;
-				do {
-					 return_code = init_game(AI_MODE, NULL);
-				} while (return_code == RESTART);
+				// get game_settings from ai_game_settings_menu
+				game_settings_t game_settings;
+				enum return_option_t return_option = init_ai_game_settings_menu(&game_settings);
+
+				if (return_option == OKAY) {
+					enum game_return_code return_code;
+					do {
+						 return_code = init_game(game_settings);
+					} while (return_code == RESTART);
+				}
 
 				// redrawing after end of game
 				// size may have changed while playing game
@@ -82,15 +94,21 @@ void init_main_menu() {
 				translate_with_box(main_menu_scr);
 				wclear(stdscr);
 			} else if (selected_opt == LOAD_OPT) {
-				timestamp_t load_timestamp;
-				memset(load_timestamp, 0, sizeof(load_timestamp));
-				if (load_menu(load_timestamp) == LOAD_FILE_SELECTED) {
-					enum game_return_code return_code = init_game(LOAD_MODE, load_timestamp);
+				game_settings_t game_settings = {
+					.game_mode = LOAD_MODE
+				};
+// 				timestamp_t load_timestamp;
+				memset(game_settings.load_timestamp, 0, sizeof(game_settings.load_timestamp));
+				if (load_menu(game_settings.load_timestamp) == LOAD_FILE_SELECTED) {
+					enum game_return_code return_code = init_game(game_settings);
 					if (return_code == INVALID_LOAD) {
 						show_warning_scr("Invalid Load File !");
 					}
 					while (return_code == RESTART) {
-						return_code = init_game(HUMAN_MODE, NULL);
+						game_settings_t game_settings = {
+							.game_mode = AI_MODE
+						};
+						return_code = init_game(game_settings);
 					}
 				};
 			} else {
